@@ -57,17 +57,21 @@ cd ..
 
 4. Set up Google Maps API Key:
    - Get an API key from [Google Cloud Console](https://console.cloud.google.com/)
-   - For Android: Update `android/app/src/main/AndroidManifest.xml`:
-     ```xml
-     <meta-data
-       android:name="com.google.android.geo.API_KEY"
-       android:value="YOUR_GOOGLE_MAPS_API_KEY"/>
+   - Copy `.env.example` to `.env`:
+     ```bash
+     cp .env.example .env
      ```
+   - Edit `.env` and add your Google Maps API key:
+     ```
+     GOOGLE_MAPS_API_KEY=your_actual_api_key_here
+     ```
+   - For Android: The AndroidManifest.xml already uses `${GOOGLE_MAPS_API_KEY}` placeholder
    - For iOS: Update `ios/parkeoya/Info.plist` (add before closing `</dict>`):
      ```xml
      <key>GMSApiKey</key>
      <string>YOUR_GOOGLE_MAPS_API_KEY</string>
      ```
+   - **Note**: Never commit your `.env` file with actual API keys. It's already in `.gitignore`
 
 ## Running the App
 

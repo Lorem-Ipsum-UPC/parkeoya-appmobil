@@ -98,23 +98,21 @@ class ParkingService {
       return R * c;
     };
 
-    const nearby = MOCK_PARKINGS.filter(parking => {
+    const nearby = MOCK_PARKINGS.map(parking => {
       const distance = calculateDistance(
         latitude,
         longitude,
         parking.latitude,
         parking.longitude,
       );
-      return distance <= radiusKm;
-    }).map(parking => ({
-      ...parking,
-      distance: calculateDistance(
-        latitude,
-        longitude,
-        parking.latitude,
-        parking.longitude,
-      ).toFixed(2),
-    }));
+      return {
+        ...parking,
+        distance: distance.toFixed(2),
+        distanceValue: distance,
+      };
+    })
+      .filter(parking => parking.distanceValue <= radiusKm)
+      .map(({distanceValue, ...parking}) => parking);
 
     return Promise.resolve(nearby);
   }

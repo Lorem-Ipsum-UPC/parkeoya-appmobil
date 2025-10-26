@@ -16,9 +16,11 @@ class ReservationService {
   async createReservation(reservation) {
     try {
       const reservations = await this.getAllReservations();
+      // Generate unique ID using timestamp + random string
+      const uniqueId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       const newReservation = {
         ...reservation,
-        id: Date.now().toString(),
+        id: uniqueId,
         status: 'confirmed',
         createdAt: new Date().toISOString(),
       };
