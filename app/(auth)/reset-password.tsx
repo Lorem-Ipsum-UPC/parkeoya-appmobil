@@ -1,22 +1,25 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+
+const logo = require('../../assets/images/parkeoya_logo.png');
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
 
   return (
     <LinearGradient
-      colors={['#6DD5A8', '#4DB8E8']}
+      colors={['#5DD587', '#41AACD']}
       style={styles.container}
     >
       <View style={styles.content}>
-        {/* Logo and Title */}
         <View style={styles.header}>
-          <View style={styles.logoSmall}>
-            <Text style={styles.logoText}>P</Text>
-          </View>
+          <Image 
+            source={logo}
+            style={styles.logoSmall}
+            resizeMode="contain"
+          />
           <Text style={styles.title}>ParkeoYa</Text>
         </View>
 
@@ -72,20 +75,9 @@ const styles = StyleSheet.create({
     marginBottom: 80,
   },
   logoSmall: {
-    width: 80,
-    height: 90,
-    backgroundColor: '#1B9B7A',
-    borderRadius: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderBottomLeftRadius: 40,
-    borderBottomRightRadius: 8,
+    width: 100,
+    height: 100,
     marginRight: 20,
-  },
-  logoText: {
-    fontSize: 64,
-    fontWeight: 'bold',
-    color: 'white',
   },
   title: {
     fontSize: 42,

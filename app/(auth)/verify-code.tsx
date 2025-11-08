@@ -9,7 +9,7 @@ export default function VerifyCodeScreen() {
 
   return (
     <LinearGradient
-      colors={['#6DD5A8', '#4DB8E8']}
+      colors={['#5DD587', '#41AACD']}
       style={styles.container}
     >
       <View style={styles.content}>

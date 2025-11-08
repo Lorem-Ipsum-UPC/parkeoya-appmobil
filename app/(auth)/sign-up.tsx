@@ -1,7 +1,9 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+
+const logo = require('../../assets/images/parkeoya_logo.png');
 
 export default function SignUpScreen() {
   const router = useRouter();
@@ -10,15 +12,16 @@ export default function SignUpScreen() {
 
   return (
     <LinearGradient
-      colors={['#6DD5A8', '#4DB8E8']}
+      colors={['#5DD587', '#41AACD']}
       style={styles.container}
     >
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
-        {/* Logo and Title */}
         <View style={styles.header}>
-          <View style={styles.logoSmall}>
-            <Text style={styles.logoText}>P</Text>
-          </View>
+          <Image 
+            source={logo}
+            style={styles.logoSmall}
+            resizeMode="contain"
+          />
           <Text style={styles.title}>ParkeoYa</Text>
         </View>
 
@@ -127,20 +130,9 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   logoSmall: {
-    width: 60,
-    height: 70,
-    backgroundColor: '#1B9B7A',
-    borderRadius: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 5,
+    width: 80,
+    height: 80,
     marginRight: 15,
-  },
-  logoText: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    color: 'white',
   },
   title: {
     fontSize: 32,

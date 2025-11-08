@@ -1,27 +1,27 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+const logo = require('../../assets/images/parkeoya_logo.png');
 
 export default function WelcomeScreen() {
   const router = useRouter();
 
   return (
     <LinearGradient
-      colors={['#6DD5A8', '#4DB8E8']}
+      colors={['#5DD587', '#41AACD']}
       style={styles.container}
     >
       <View style={styles.content}>
-        {/* Logo */}
         <View style={styles.logoContainer}>
-          <View style={styles.logoCircle}>
-            <Text style={styles.logoText}>P</Text>
-          </View>
-          <View style={styles.ripples}>
-            <View style={styles.ripple1} />
-            <View style={styles.ripple2} />
-          </View>
+          <Image 
+            source={logo}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
         </View>
+
 
         {/* Title */}
         <Text style={styles.title}>Welcome to{'\n'}ParkeoYa</Text>
@@ -61,48 +61,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 60,
-    position: 'relative',
   },
-  logoCircle: {
-    width: 160,
-    height: 180,
-    backgroundColor: '#1B9B7A',
-    borderRadius: 80,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderBottomLeftRadius: 80,
-    borderBottomRightRadius: 10,
-    zIndex: 2,
-  },
-  logoText: {
-    fontSize: 120,
-    fontWeight: 'bold',
-    color: 'white',
-    marginTop: -10,
-  },
-  ripples: {
-    position: 'absolute',
-    bottom: -30,
-    alignItems: 'center',
-  },
-  ripple1: {
-    width: 140,
-    height: 50,
-    borderRadius: 70,
-    borderWidth: 6,
-    borderColor: '#3AA8D8',
-    position: 'absolute',
-    opacity: 0.6,
-  },
-  ripple2: {
-    width: 170,
-    height: 60,
-    borderRadius: 85,
-    borderWidth: 6,
-    borderColor: '#5CC1E8',
-    position: 'absolute',
-    top: 5,
-    opacity: 0.4,
+  logoImage: {
+    width: 250,
+    height: 250,
   },
   title: {
     fontSize: 36,
