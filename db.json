@@ -116,9 +116,10 @@
   "users": [
     {
       "id": "user1",
-      "name": "Juan Pérez",
-      "email": "juan.perez@example.com",
-      "phone": "+51 999 888 777",
+      "name": "Tralalero Tralala",
+      "email": "tralalerotralala@gmail.com",
+      "phone": "999484999",
+      "address": "Av. Primavera 1750, Lima 15023",
       "avatar": "https://via.placeholder.com/150"
     }
   ],
@@ -127,18 +128,20 @@
       "id": "car1",
       "userId": "user1",
       "brand": "Toyota",
-      "model": "Corolla",
-      "plate": "ABC-123",
-      "color": "Blanco",
+      "model": "Toyota",
+      "plate": "A1A-123",
+      "color": "Red",
+      "colorHex": "#E74C3C",
       "year": 2020
     },
     {
       "id": "car2",
       "userId": "user1",
-      "brand": "Honda",
-      "model": "Civic",
-      "plate": "XYZ-789",
-      "color": "Negro",
+      "brand": "Suzuki",
+      "model": "Suzuki",
+      "plate": "A4B-456",
+      "color": "Black",
+      "colorHex": "#2C3E50",
       "year": 2021
     }
   ],

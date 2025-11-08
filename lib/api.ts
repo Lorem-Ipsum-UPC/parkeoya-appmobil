@@ -1,5 +1,7 @@
-// API Base URL - Cambia esto según tu configuración
-const API_BASE_URL = 'http://localhost:3000';
+import { Config } from '@/constants/Config';
+
+// API Base URL desde configuración
+const API_BASE_URL = Config.API_BASE_URL;
 
 // Tipos de datos
 export interface Parking {
@@ -48,6 +50,7 @@ export interface User {
   email: string;
   phone: string;
   avatar: string;
+  address?: string;
 }
 
 export interface Vehicle {
@@ -57,6 +60,7 @@ export interface Vehicle {
   model: string;
   plate: string;
   color: string;
+  colorHex?: string;
   year: number;
 }
 

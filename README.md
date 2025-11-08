@@ -62,9 +62,23 @@ Para modificar los datos, edita el archivo `db.json` en la raíz del proyecto.
 ```
 app/
   (auth)/         # Pantallas de autenticación
+    - welcome.tsx       # Pantalla de bienvenida
+    - sign-in.tsx       # Inicio de sesión
+    - sign-up.tsx       # Registro
+    - forgot-password.tsx
+    - verify-code.tsx
+    - reset-password.tsx
   (tabs)/         # Pantallas principales con tabs
+    - index.tsx         # Home (búsqueda de parkings)
+    - profile.tsx       # Perfil de usuario
+    - map.tsx
+    - reservation.tsx
   parking/        # Pantallas relacionadas con estacionamientos
   profile/        # Pantallas de perfil
+    - my-cars.tsx       # Lista de vehículos
+    - add-car.tsx       # Agregar nuevo vehículo
+    - edit.tsx          # Editar perfil
+    - payment-history.tsx
   reservation/    # Pantallas de reservas
 components/       # Componentes reutilizables
 lib/
@@ -72,6 +86,79 @@ lib/
   storage.ts      # Almacenamiento local
   utils.ts        # Utilidades
 ```
+
+## Pantallas implementadas
+
+### Autenticación ✅
+- **Welcome**: Pantalla inicial con logo y opciones de Sign in/Sign up
+- **Sign In**: Inicio de sesión con email y contraseña
+- **Sign Up**: Registro de usuario con datos completos
+- **Forgot Password**: Recuperación de contraseña
+- **Verify Code**: Verificación de código de 5 dígitos
+- **Reset Password**: Establecer nueva contraseña
+
+### Home ✅
+- Búsqueda de estacionamientos
+- Vista de lugares recientes
+- Integración con fake API
+- Tarjetas de parking con información
+
+### Perfil ✅
+- **My Profile**: Vista principal del perfil con:
+  - Información del usuario (avatar, nombre, email, teléfono, dirección)
+  - Lista de vehículos registrados
+  - Lugares recientes visitados
+  - Historial de pagos
+  - Botón para editar perfil
+  
+- **My Cars**: Lista detallada de vehículos con:
+  - Visualización de cada vehículo con su color
+  - Información: Modelo, Color, Placa
+  - Opciones para editar o eliminar
+  - Botón para agregar nuevo vehículo
+
+- **Add New Car**: Formulario para agregar vehículo:
+  - Campo de modelo
+  - Selector de color con vista previa
+  - Campo de placa
+  - Vista previa del auto en el color seleccionado
+  
+- **Edit Profile**: Edición de perfil completo:
+  - Cambio de foto de perfil
+  - Edición de nombre, email, teléfono
+  - Cambio de contraseña
+  - Validaciones de campos
+
+## Datos de prueba (Fake API)
+
+### Usuario:
+```json
+{
+  "name": "Tralalero Tralala",
+  "email": "tralalerotralala@gmail.com",
+  "phone": "999484999",
+  "address": "Av. Primavera 1750, Lima 15023"
+}
+```
+
+### Vehículos:
+- Toyota Red (A1A-123)
+- Suzuki Black (A4B-456)
+
+### Endpoints de perfil disponibles:
+- `GET /users/user1` - Obtener datos del usuario
+- `PATCH /users/user1` - Actualizar datos del usuario
+- `GET /vehicles?userId=user1` - Obtener vehículos del usuario
+- `POST /vehicles` - Agregar nuevo vehículo
+- `DELETE /vehicles/:id` - Eliminar vehículo
+
+## Navegación
+
+La navegación está configurada para:
+- La app inicia en la pantalla **Welcome**
+- Después del login/registro, se accede a las tabs principales
+- Desde el perfil se puede navegar a My Cars, Add Car y Edit Profile
+- Todas las pantallas están conectadas al fake API
 
 ## Learn more
 
