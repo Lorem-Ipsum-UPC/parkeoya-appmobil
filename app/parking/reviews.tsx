@@ -1,4 +1,4 @@
-import { api, Parking, Review } from '@/lib/api';
+import { api, Parking, Review } from '@/lib/data';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -39,55 +39,6 @@ export default function ReviewsScreen() {
       }
     } catch (error) {
       console.error('Error loading data:', error);
-      // Datos mock
-      setParking({
-        id: '1',
-        name: 'Parking Tralalero Primavera',
-        address: 'Av. Primavera 1750, Lima 15023',
-        distance: '1.3 Km',
-        pricePerHour: 5.0,
-        currency: 'S/.',
-        rating: 4.5,
-        totalSpots: 18,
-        availableSpots: 12,
-        latitude: -12.1108,
-        longitude: -77.0045,
-        image: 'https://via.placeholder.com/400x200',
-        features: [],
-        floors: [],
-      });
-      setReviews([
-        {
-          id: '1',
-          parkingId: '1',
-          userId: 'user1',
-          userName: 'Tralalero Tralala',
-          userAvatar: 'https://via.placeholder.com/150',
-          rating: 3.5,
-          comment: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis at leo semper, iaculis sem et, dignissim ante. Vivamus maximus sapien purus. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam maximus orci at velit blandit, eu bibendum justo pulvinar. Donec',
-          date: '2025-10-16T10:00:00Z',
-        },
-        {
-          id: '2',
-          parkingId: '1',
-          userId: 'user1',
-          userName: 'Tralalero Tralala',
-          userAvatar: 'https://via.placeholder.com/150',
-          rating: 4,
-          comment: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis at leo semper, iaculis sem et, dignissim ante. Vivamus maximus sapien purus. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam maximus orci at velit blandit, eu bibendum justo pulvinar. Donec',
-          date: '2025-10-16T10:00:00Z',
-        },
-        {
-          id: '3',
-          parkingId: '1',
-          userId: 'user1',
-          userName: 'Tralalero Tralala',
-          userAvatar: 'https://via.placeholder.com/150',
-          rating: 3.5,
-          comment: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis at leo semper, iaculis sem et, dignissim ante. Vivamus maximus sapien purus. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam maximus orci at velit blandit, eu bibendum justo pulvinar. Donec',
-          date: '2025-10-16T10:00:00Z',
-        },
-      ]);
     }
   };
 

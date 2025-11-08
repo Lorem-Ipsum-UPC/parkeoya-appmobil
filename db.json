@@ -3,8 +3,8 @@
     {
       "id": "1",
       "name": "Parking Tralalero Primavera",
-      "address": "Av. Primavera 1750, Lima 15023",
-      "distance": "3.2 KM",
+      "address": "Av. Primavera 1750, Santiago de Surco",
+      "distance": "1.2 KM",
       "pricePerHour": 5.0,
       "currency": "S/.",
       "rating": 4.5,
@@ -21,17 +21,28 @@
             { "id": "A1", "status": "available", "type": "regular" },
             { "id": "A2", "status": "occupied", "type": "regular" },
             { "id": "A3", "status": "available", "type": "regular" },
-            { "id": "A4", "status": "reserved", "type": "disabled" }
+            { "id": "A4", "status": "reserved", "type": "disabled" },
+            { "id": "A5", "status": "available", "type": "regular" },
+            { "id": "A6", "status": "occupied", "type": "ev" }
+          ]
+        },
+        {
+          "floor": 2,
+          "spots": [
+            { "id": "B1", "status": "available", "type": "regular" },
+            { "id": "B2", "status": "available", "type": "regular" },
+            { "id": "B3", "status": "occupied", "type": "regular" },
+            { "id": "B4", "status": "available", "type": "disabled" }
           ]
         }
       ]
     },
     {
       "id": "2",
-      "name": "Parking Tralalero San Isidro",
-      "address": "Av. Javier Prado 2850, Lima 15036",
-      "distance": "3.2 KM",
-      "pricePerHour": 5.0,
+      "name": "Parking San Isidro Golf",
+      "address": "Av. Javier Prado Este 2850, San Isidro",
+      "distance": "2.5 KM",
+      "pricePerHour": 6.5,
       "currency": "S/.",
       "rating": 4.7,
       "totalSpots": 80,
@@ -44,9 +55,10 @@
         {
           "floor": 1,
           "spots": [
-            { "id": "B1", "status": "available", "type": "regular" },
-            { "id": "B2", "status": "available", "type": "regular" },
-            { "id": "B3", "status": "occupied", "type": "regular" }
+            { "id": "C1", "status": "available", "type": "regular" },
+            { "id": "C2", "status": "available", "type": "regular" },
+            { "id": "C3", "status": "occupied", "type": "regular" },
+            { "id": "C4", "status": "available", "type": "ev" }
           ]
         }
       ]
@@ -54,8 +66,8 @@
     {
       "id": "3",
       "name": "Parking Plaza San Miguel",
-      "address": "Av. La Marina 2000, Lima 15088",
-      "distance": "4.5 KM",
+      "address": "Av. La Marina 2000, San Miguel",
+      "distance": "5.8 KM",
       "pricePerHour": 4.5,
       "currency": "S/.",
       "rating": 4.2,
@@ -69,8 +81,10 @@
         {
           "floor": 1,
           "spots": [
-            { "id": "C1", "status": "available", "type": "regular" },
-            { "id": "C2", "status": "available", "type": "regular" }
+            { "id": "D1", "status": "available", "type": "regular" },
+            { "id": "D2", "status": "available", "type": "regular" },
+            { "id": "D3", "status": "occupied", "type": "regular" },
+            { "id": "D4", "status": "available", "type": "disabled" }
           ]
         }
       ]
@@ -78,9 +92,9 @@
     {
       "id": "4",
       "name": "Parking Miraflores Centro",
-      "address": "Av. Larco 1301, Lima 15074",
-      "distance": "2.8 KM",
-      "pricePerHour": 6.0,
+      "address": "Av. Larco 1301, Miraflores",
+      "distance": "0.8 KM",
+      "pricePerHour": 7.0,
       "currency": "S/.",
       "rating": 4.8,
       "totalSpots": 60,
@@ -93,8 +107,108 @@
         {
           "floor": 1,
           "spots": [
-            { "id": "D1", "status": "available", "type": "regular" },
-            { "id": "D2", "status": "occupied", "type": "regular" }
+            { "id": "E1", "status": "available", "type": "regular" },
+            { "id": "E2", "status": "occupied", "type": "regular" },
+            { "id": "E3", "status": "available", "type": "ev" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "5",
+      "name": "Parking Larcomar",
+      "address": "Malecón de la Reserva 610, Miraflores",
+      "distance": "1.5 KM",
+      "pricePerHour": 8.0,
+      "currency": "S/.",
+      "rating": 4.9,
+      "totalSpots": 200,
+      "availableSpots": 67,
+      "latitude": -12.1341,
+      "longitude": -77.0290,
+      "image": "https://via.placeholder.com/300x200",
+      "features": ["covered", "security", "24/7", "valet", "ev-charging"],
+      "floors": [
+        {
+          "floor": 1,
+          "spots": [
+            { "id": "F1", "status": "available", "type": "regular" },
+            { "id": "F2", "status": "available", "type": "regular" },
+            { "id": "F3", "status": "occupied", "type": "regular" },
+            { "id": "F4", "status": "available", "type": "disabled" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "6",
+      "name": "Parking Real Plaza Salaverry",
+      "address": "Av. Salaverry 2370, Jesús María",
+      "distance": "3.2 KM",
+      "pricePerHour": 5.5,
+      "currency": "S/.",
+      "rating": 4.4,
+      "totalSpots": 150,
+      "availableSpots": 52,
+      "latitude": -12.0801,
+      "longitude": -77.0532,
+      "image": "https://via.placeholder.com/300x200",
+      "features": ["covered", "security", "24/7"],
+      "floors": [
+        {
+          "floor": 1,
+          "spots": [
+            { "id": "G1", "status": "available", "type": "regular" },
+            { "id": "G2", "status": "occupied", "type": "regular" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "7",
+      "name": "Parking Jockey Plaza",
+      "address": "Av. Javier Prado Este 4200, Surco",
+      "distance": "4.1 KM",
+      "pricePerHour": 6.0,
+      "currency": "S/.",
+      "rating": 4.6,
+      "totalSpots": 300,
+      "availableSpots": 98,
+      "latitude": -12.0891,
+      "longitude": -76.9774,
+      "image": "https://via.placeholder.com/300x200",
+      "features": ["covered", "security", "24/7", "valet", "ev-charging"],
+      "floors": [
+        {
+          "floor": 1,
+          "spots": [
+            { "id": "H1", "status": "available", "type": "regular" },
+            { "id": "H2", "status": "available", "type": "regular" },
+            { "id": "H3", "status": "occupied", "type": "ev" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "8",
+      "name": "Parking Barranco",
+      "address": "Av. Bolognesi 421, Barranco",
+      "distance": "2.3 KM",
+      "pricePerHour": 5.0,
+      "currency": "S/.",
+      "rating": 4.3,
+      "totalSpots": 40,
+      "availableSpots": 15,
+      "latitude": -12.1467,
+      "longitude": -77.0207,
+      "image": "https://via.placeholder.com/300x200",
+      "features": ["security", "24/7"],
+      "floors": [
+        {
+          "floor": 1,
+          "spots": [
+            { "id": "I1", "status": "available", "type": "regular" },
+            { "id": "I2", "status": "occupied", "type": "regular" }
           ]
         }
       ]

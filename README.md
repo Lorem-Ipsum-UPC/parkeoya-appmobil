@@ -10,15 +10,7 @@ Aplicación móvil para búsqueda y reserva de estacionamientos.
    npm install
    ```
 
-2. Start the fake API server (en una terminal separada)
-
-   ```bash
-   npm run api
-   ```
-
-   El servidor JSON estará disponible en `http://localhost:3000`
-
-3. Start the app
+2. Start the app
 
    ```bash
    npx expo start
@@ -33,23 +25,32 @@ In the output, you'll find options to open the app in a
 
 **Nota:** Para probar la funcionalidad de ubicación completa, se recomienda usar un dispositivo real o un emulador con ubicación configurada. Ver [LOCATION_SETUP.md](./LOCATION_SETUP.md) para más detalles.
 
-## Fake API
+## Base de Datos Local
 
-El proyecto incluye un servidor JSON para desarrollo local con datos de prueba.
+La aplicación usa un sistema de base de datos local que carga los datos directamente desde `db.json`. **No requiere servidor JSON en ejecución**.
 
-### Endpoints disponibles:
+### Datos incluidos en db.json:
 
-- `GET /parkings` - Lista de estacionamientos
-- `GET /parkings/:id` - Detalles de un estacionamiento
-- `GET /reservations` - Lista de reservas
-- `POST /reservations` - Crear nueva reserva
-- `GET /users/:id` - Información de usuario
-- `GET /vehicles` - Lista de vehículos
-- `POST /vehicles` - Agregar vehículo
-- `GET /paymentMethods` - Métodos de pago
-- `GET /reviews` - Reseñas
+- **Parkings**: 8 estacionamientos ubicados en diferentes zonas de Lima
+  - Surco (Primavera)
+  - San Isidro
+  - San Miguel
+  - Miraflores (2 ubicaciones)
+  - Jesús María
+  - Barranco
+  
+- **Usuarios**: Usuario de prueba "Tralalero Tralala"
+- **Vehículos**: 2 vehículos de ejemplo (Toyota y Suzuki)
+- **Reservas**: Reserva activa de ejemplo
+- **Reviews**: 3 reseñas para el parking principal
+- **Métodos de pago**: Tarjeta de ejemplo
 
-### Datos de prueba incluidos:
+### Características de los datos:
+
+✅ **Todos los parkings están geolocalizados en Lima** con coordenadas reales
+✅ Los datos se cargan instantáneamente (sin necesidad de servidor)
+✅ Cambios en la app se mantienen durante la sesión
+✅ Los datos se pueden resetear recargando la aplicación
 
 - 4 estacionamientos con diferentes ubicaciones
 - 1 usuario de ejemplo

@@ -1,4 +1,4 @@
-import { mockParkings, Parking } from '@/lib/api';
+import { mockParkings, Parking } from '@/lib/data';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';

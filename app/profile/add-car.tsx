@@ -1,4 +1,4 @@
-import { api } from '@/lib/api';
+import { api } from '@/lib/data';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';

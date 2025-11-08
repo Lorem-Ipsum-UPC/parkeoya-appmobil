@@ -1,4 +1,4 @@
-import { api, Parking } from '@/lib/api';
+import { api, Parking } from '@/lib/data';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -30,23 +30,6 @@ export default function ParkingDetailsScreen() {
       }
     } catch (error) {
       console.error('Error loading parking details:', error);
-      // Datos mock
-      setParking({
-        id: '1',
-        name: 'Parking Tralalero Primavera',
-        address: 'Av. Primavera 1750, Lima 15023',
-        distance: '1.3 Km away',
-        pricePerHour: 5.0,
-        currency: 'S/.',
-        rating: 4.5,
-        totalSpots: 18,
-        availableSpots: 12,
-        latitude: -12.1108,
-        longitude: -77.0045,
-        image: 'https://images.unsplash.com/photo-1590674899484-d5640e854abe?w=800',
-        features: ['covered', 'security', '24/7'],
-        floors: [],
-      });
     }
   };
 

@@ -1,4 +1,4 @@
-import { api, Parking } from '@/lib/api';
+import { api, Parking } from '@/lib/data';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
@@ -89,41 +89,6 @@ export default function MapScreen() {
       setParkings(data);
     } catch (error) {
       console.error('Error loading parkings:', error);
-      // Usar datos mock si falla
-      setParkings([
-        {
-          id: '1',
-          name: 'Parking Tralalero Primavera',
-          address: 'Av. Primavera 1750, Lima 15023',
-          distance: '1.3 Km',
-          pricePerHour: 5.0,
-          currency: 'S/.',
-          rating: 4.5,
-          totalSpots: 18,
-          availableSpots: 12,
-          latitude: -12.1108,
-          longitude: -77.0045,
-          image: 'https://via.placeholder.com/400x200',
-          features: ['covered', 'security', '24/7'],
-          floors: [],
-        },
-        {
-          id: '2',
-          name: 'Parking Centro',
-          address: 'Av. Javier Prado 2850',
-          distance: '2.1 Km',
-          pricePerHour: 5.0,
-          currency: 'S/.',
-          rating: 4.2,
-          totalSpots: 20,
-          availableSpots: 8,
-          latitude: -12.1050,
-          longitude: -77.0100,
-          image: 'https://via.placeholder.com/400x200',
-          features: ['covered'],
-          floors: [],
-        },
-      ]);
     }
   };
 
@@ -141,16 +106,7 @@ export default function MapScreen() {
         followsUserLocation={false}
       >
         {/* User Location Marker (solo si tenemos ubicación) */}
-        {userLocation && (
-          <Marker
-            coordinate={userLocation}
-            anchor={{ x: 0.5, y: 0.5 }}
-          >
-            <View style={styles.userMarker}>
-              <View style={styles.userMarkerInner} />
-            </View>
-          </Marker>
-        )}
+
 
         {/* Parking Markers */}
         {parkings.map((parking) => (

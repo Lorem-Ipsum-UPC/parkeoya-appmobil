@@ -1,4 +1,4 @@
-import { api, Parking, User, Vehicle } from '@/lib/api';
+import { api, Parking, User, Vehicle } from '@/lib/data';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -34,42 +34,11 @@ export default function ProfileScreen() {
       const vehiclesData = await api.getVehicles('user1');
       setVehicles(vehiclesData);
 
-      // Cargar lugares recientes (mockear por ahora)
+      // Cargar lugares recientes
       const parkingsData = await api.getParkings();
       setRecentParkings(parkingsData.slice(0, 2));
     } catch (error) {
       console.error('Error loading user data:', error);
-      // Usar datos mock si falla la API
-      setUser({
-        id: 'user1',
-        name: 'Tralalero Tralala',
-        email: 'tralalerotralala@gmail.com',
-        phone: '999484999',
-        avatar: 'https://via.placeholder.com/150',
-        address: 'Av. Primavera 1750, Lima 15023',
-      });
-      setVehicles([
-        {
-          id: 'car1',
-          userId: 'user1',
-          brand: 'Toyota',
-          model: 'Toyota',
-          plate: 'A1A-123',
-          color: 'Red',
-          colorHex: '#E74C3C',
-          year: 2020,
-        },
-        {
-          id: 'car2',
-          userId: 'user1',
-          brand: 'Suzuki',
-          model: 'Suzuki',
-          plate: 'A4B-456',
-          color: 'Black',
-          colorHex: '#2C3E50',
-          year: 2021,
-        },
-      ]);
     }
   };
 
