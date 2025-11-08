@@ -1,6 +1,6 @@
-# Welcome to your Expo app 👋
+# ParkeoYa - App Móvil
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Aplicación móvil para búsqueda y reserva de estacionamientos.
 
 ## Get started
 
@@ -10,7 +10,15 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npm install
    ```
 
-2. Start the app
+2. Start the fake API server (en una terminal separada)
+
+   ```bash
+   npm run api
+   ```
+
+   El servidor JSON estará disponible en `http://localhost:3000`
+
+3. Start the app
 
    ```bash
    npx expo start
@@ -23,17 +31,47 @@ In the output, you'll find options to open the app in a
 - [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
 - [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Fake API
 
-## Get a fresh project
+El proyecto incluye un servidor JSON para desarrollo local con datos de prueba.
 
-When you're ready, run:
+### Endpoints disponibles:
 
-```bash
-npm run reset-project
+- `GET /parkings` - Lista de estacionamientos
+- `GET /parkings/:id` - Detalles de un estacionamiento
+- `GET /reservations` - Lista de reservas
+- `POST /reservations` - Crear nueva reserva
+- `GET /users/:id` - Información de usuario
+- `GET /vehicles` - Lista de vehículos
+- `POST /vehicles` - Agregar vehículo
+- `GET /paymentMethods` - Métodos de pago
+- `GET /reviews` - Reseñas
+
+### Datos de prueba incluidos:
+
+- 4 estacionamientos con diferentes ubicaciones
+- 1 usuario de ejemplo
+- 2 vehículos
+- 1 método de pago
+- 1 reserva activa
+
+Para modificar los datos, edita el archivo `db.json` en la raíz del proyecto.
+
+## Estructura del proyecto
+
 ```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+app/
+  (auth)/         # Pantallas de autenticación
+  (tabs)/         # Pantallas principales con tabs
+  parking/        # Pantallas relacionadas con estacionamientos
+  profile/        # Pantallas de perfil
+  reservation/    # Pantallas de reservas
+components/       # Componentes reutilizables
+lib/
+  api.ts          # Servicio API y tipos
+  storage.ts      # Almacenamiento local
+  utils.ts        # Utilidades
+```
 
 ## Learn more
 

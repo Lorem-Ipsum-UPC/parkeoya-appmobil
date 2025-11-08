@@ -1,0 +1,166 @@
+{
+  "parkings": [
+    {
+      "id": "1",
+      "name": "Parking Tralalero Primavera",
+      "address": "Av. Primavera 1750, Lima 15023",
+      "distance": "3.2 KM",
+      "pricePerHour": 5.0,
+      "currency": "S/.",
+      "rating": 4.5,
+      "totalSpots": 50,
+      "availableSpots": 12,
+      "latitude": -12.1108,
+      "longitude": -77.0045,
+      "image": "https://via.placeholder.com/300x200",
+      "features": ["covered", "security", "24/7"],
+      "floors": [
+        {
+          "floor": 1,
+          "spots": [
+            { "id": "A1", "status": "available", "type": "regular" },
+            { "id": "A2", "status": "occupied", "type": "regular" },
+            { "id": "A3", "status": "available", "type": "regular" },
+            { "id": "A4", "status": "reserved", "type": "disabled" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "name": "Parking Tralalero San Isidro",
+      "address": "Av. Javier Prado 2850, Lima 15036",
+      "distance": "3.2 KM",
+      "pricePerHour": 5.0,
+      "currency": "S/.",
+      "rating": 4.7,
+      "totalSpots": 80,
+      "availableSpots": 25,
+      "latitude": -12.0957,
+      "longitude": -77.0365,
+      "image": "https://via.placeholder.com/300x200",
+      "features": ["covered", "security", "24/7", "valet"],
+      "floors": [
+        {
+          "floor": 1,
+          "spots": [
+            { "id": "B1", "status": "available", "type": "regular" },
+            { "id": "B2", "status": "available", "type": "regular" },
+            { "id": "B3", "status": "occupied", "type": "regular" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "name": "Parking Plaza San Miguel",
+      "address": "Av. La Marina 2000, Lima 15088",
+      "distance": "4.5 KM",
+      "pricePerHour": 4.5,
+      "currency": "S/.",
+      "rating": 4.2,
+      "totalSpots": 120,
+      "availableSpots": 45,
+      "latitude": -12.0764,
+      "longitude": -77.0864,
+      "image": "https://via.placeholder.com/300x200",
+      "features": ["covered", "security"],
+      "floors": [
+        {
+          "floor": 1,
+          "spots": [
+            { "id": "C1", "status": "available", "type": "regular" },
+            { "id": "C2", "status": "available", "type": "regular" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4",
+      "name": "Parking Miraflores Centro",
+      "address": "Av. Larco 1301, Lima 15074",
+      "distance": "2.8 KM",
+      "pricePerHour": 6.0,
+      "currency": "S/.",
+      "rating": 4.8,
+      "totalSpots": 60,
+      "availableSpots": 8,
+      "latitude": -12.1198,
+      "longitude": -77.0282,
+      "image": "https://via.placeholder.com/300x200",
+      "features": ["covered", "security", "24/7", "ev-charging"],
+      "floors": [
+        {
+          "floor": 1,
+          "spots": [
+            { "id": "D1", "status": "available", "type": "regular" },
+            { "id": "D2", "status": "occupied", "type": "regular" }
+          ]
+        }
+      ]
+    }
+  ],
+  "reservations": [
+    {
+      "id": "1",
+      "userId": "user1",
+      "parkingId": "1",
+      "spotId": "A4",
+      "startTime": "2025-11-08T10:00:00Z",
+      "endTime": "2025-11-08T14:00:00Z",
+      "status": "active",
+      "totalCost": 20.0,
+      "vehicleId": "car1"
+    }
+  ],
+  "users": [
+    {
+      "id": "user1",
+      "name": "Juan Pérez",
+      "email": "juan.perez@example.com",
+      "phone": "+51 999 888 777",
+      "avatar": "https://via.placeholder.com/150"
+    }
+  ],
+  "vehicles": [
+    {
+      "id": "car1",
+      "userId": "user1",
+      "brand": "Toyota",
+      "model": "Corolla",
+      "plate": "ABC-123",
+      "color": "Blanco",
+      "year": 2020
+    },
+    {
+      "id": "car2",
+      "userId": "user1",
+      "brand": "Honda",
+      "model": "Civic",
+      "plate": "XYZ-789",
+      "color": "Negro",
+      "year": 2021
+    }
+  ],
+  "paymentMethods": [
+    {
+      "id": "pm1",
+      "userId": "user1",
+      "type": "card",
+      "cardNumber": "**** **** **** 1234",
+      "cardHolder": "JUAN PEREZ",
+      "expiryDate": "12/25",
+      "isDefault": true
+    }
+  ],
+  "reviews": [
+    {
+      "id": "1",
+      "parkingId": "1",
+      "userId": "user1",
+      "rating": 5,
+      "comment": "Excelente servicio, muy seguro",
+      "date": "2025-11-01T10:00:00Z"
+    }
+  ]
+}
