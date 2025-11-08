@@ -161,9 +161,31 @@
       "id": "1",
       "parkingId": "1",
       "userId": "user1",
-      "rating": 5,
-      "comment": "Excelente servicio, muy seguro",
-      "date": "2025-11-01T10:00:00Z"
+      "userName": "Tralalero Tralala",
+      "userAvatar": "https://via.placeholder.com/150",
+      "rating": 3.5,
+      "comment": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis at leo semper, iaculis sem et, dignissim ante. Vivamus maximus sapien purus. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam maximus orci at velit blandit, eu bibendum justo pulvinar. Donec",
+      "date": "2025-10-16T10:00:00Z"
+    },
+    {
+      "id": "2",
+      "parkingId": "1",
+      "userId": "user1",
+      "userName": "Tralalero Tralala",
+      "userAvatar": "https://via.placeholder.com/150",
+      "rating": 4,
+      "comment": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis at leo semper, iaculis sem et, dignissim ante. Vivamus maximus sapien purus. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam maximus orci at velit blandit, eu bibendum justo pulvinar. Donec",
+      "date": "2025-10-16T10:00:00Z"
+    },
+    {
+      "id": "3",
+      "parkingId": "1",
+      "userId": "user1",
+      "userName": "Tralalero Tralala",
+      "userAvatar": "https://via.placeholder.com/150",
+      "rating": 3.5,
+      "comment": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis at leo semper, iaculis sem et, dignissim ante. Vivamus maximus sapien purus. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam maximus orci at velit blandit, eu bibendum justo pulvinar. Donec",
+      "date": "2025-10-16T10:00:00Z"
     }
   ]
 }

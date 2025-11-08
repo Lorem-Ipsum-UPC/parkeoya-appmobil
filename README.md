@@ -31,6 +31,8 @@ In the output, you'll find options to open the app in a
 - [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
 - [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
+**Nota:** Para probar la funcionalidad de ubicación completa, se recomienda usar un dispositivo real o un emulador con ubicación configurada. Ver [LOCATION_SETUP.md](./LOCATION_SETUP.md) para más detalles.
+
 ## Fake API
 
 El proyecto incluye un servidor JSON para desarrollo local con datos de prueba.
