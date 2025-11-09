@@ -250,11 +250,33 @@
       "id": "1",
       "userId": "user1",
       "parkingId": "1",
-      "spotId": "A4",
-      "startTime": "2025-11-08T10:00:00Z",
-      "endTime": "2025-11-08T14:00:00Z",
+      "spotId": "20",
+      "startTime": "2025-11-09T08:00:00Z",
+      "endTime": "2025-11-09T12:00:00Z",
       "status": "active",
       "totalCost": 20.0,
+      "vehicleId": "car1"
+    },
+    {
+      "id": "2",
+      "userId": "user1",
+      "parkingId": "1",
+      "spotId": "17",
+      "startTime": "2025-11-05T10:00:00Z",
+      "endTime": "2025-11-05T14:00:00Z",
+      "status": "completed",
+      "totalCost": 20.0,
+      "vehicleId": "car2"
+    },
+    {
+      "id": "3",
+      "userId": "user1",
+      "parkingId": "4",
+      "spotId": "E2",
+      "startTime": "2025-11-01T09:00:00Z",
+      "endTime": "2025-11-01T11:00:00Z",
+      "status": "cancelled",
+      "totalCost": 14.0,
       "vehicleId": "car1"
     }
   ],
