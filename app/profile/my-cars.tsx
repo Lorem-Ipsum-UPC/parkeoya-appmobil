@@ -1,0 +1,232 @@
+import CarImage from '@/components/ui/CarImage';
+import { api, Vehicle } from '@/lib/data';
+import { StorageService } from '@/lib/storage';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import {
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
+
+export default function MyCarsScreen() {
+  const router = useRouter();
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [userId, setUserId] = useState<string>('');
+
+  useEffect(() => {
+    loadVehicles();
+  }, []);
+
+  const loadVehicles = async () => {
+    try {
+      const currentUser = await StorageService.getCurrentUser();
+      if (!currentUser) {
+        Alert.alert('Session Expired', 'Please login again');
+        router.replace('/(auth)/sign-in');
+        return;
+      }
+      setUserId(currentUser.id);
+      const data = await api.getVehicles(currentUser.id);
+      setVehicles(data);
+    } catch (error) {
+      console.error('Error loading vehicles:', error);
+    }
+  };
+
+  const handleDeleteCar = (vehicleId: string, brand: string) => {
+    Alert.alert(
+      'Delete Car',
+      `Are you sure you want to delete ${brand}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await api.deleteVehicle(vehicleId);
+              loadVehicles();
+            } catch (error) {
+              console.error('Error deleting vehicle:', error);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <Ionicons name="arrow-back" size={24} color="#2C3E50" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>My cars</Text>
+        <View style={styles.backButton} />
+      </View>
+
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <Text style={styles.pageTitle}>My cars ({vehicles.length})</Text>
+
+        {vehicles.map((vehicle) => (
+          <View key={vehicle.id} style={styles.carCard}>
+            <View style={styles.carIconContainer}>
+              <CarImage 
+                colorHex={vehicle.colorHex} 
+                color={vehicle.color}
+                width={180}
+                height={90}
+              />
+            </View>
+
+            <View style={styles.carDetails}>
+              <Text style={styles.detailLabel}>Model: <Text style={styles.detailValue}>{vehicle.model}</Text></Text>
+              <Text style={styles.detailLabel}>Color: <Text style={styles.detailValue}>{vehicle.color}</Text></Text>
+              <Text style={styles.detailLabel}>Plate: <Text style={styles.detailValue}>{vehicle.plate}</Text></Text>
+            </View>
+
+            <TouchableOpacity style={styles.editCarButton}>
+              <Ionicons name="create-outline" size={20} color="white" style={{ marginRight: 8 }} />
+              <Text style={styles.editCarButtonText}>Edit car</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.deleteCarButton}
+              onPress={() => handleDeleteCar(vehicle.id, vehicle.brand)}
+            >
+              <Text style={styles.deleteCarButtonText}>Delete car</Text>
+            </TouchableOpacity>
+          </View>
+        ))}
+
+        <TouchableOpacity
+          style={styles.addNewCarButton}
+          onPress={() => router.push('/profile/add-car')}
+        >
+          <Text style={styles.addNewCarButtonText}>Add new car</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F5F5F5',
+  },
+  header: {
+    backgroundColor: 'white',
+    paddingTop: 50,
+    paddingBottom: 16,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#2C3E50',
+  },
+  content: {
+    flex: 1,
+    padding: 20,
+  },
+  pageTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#2C3E50',
+    marginBottom: 24,
+  },
+  carCard: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 24,
+    marginBottom: 20,
+    borderWidth: 2,
+    borderColor: '#E0E0E0',
+    alignItems: 'center',
+  },
+  carIconContainer: {
+    width: 200,
+    height: 120,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+    backgroundColor: '#F5F5F5',
+  },
+  carDetails: {
+    width: '100%',
+    marginBottom: 20,
+  },
+  detailLabel: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#2C3E50',
+    marginBottom: 8,
+  },
+  detailValue: {
+    fontWeight: 'normal',
+    color: '#2C3E50',
+  },
+  editCarButton: {
+    backgroundColor: '#2C3E50',
+    paddingVertical: 14,
+    paddingHorizontal: 40,
+    borderRadius: 12,
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '80%',
+    justifyContent: 'center',
+  },
+  editCarButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  deleteCarButton: {
+    backgroundColor: '#E74C3C',
+    paddingVertical: 14,
+    paddingHorizontal: 40,
+    borderRadius: 12,
+    width: '80%',
+    alignItems: 'center',
+  },
+  deleteCarButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  addNewCarButton: {
+    backgroundColor: '#1B5E6F',
+    paddingVertical: 18,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  addNewCarButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+});
