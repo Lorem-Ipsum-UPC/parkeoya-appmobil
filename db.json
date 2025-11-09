@@ -232,8 +232,27 @@
       "id": "user1",
       "name": "Tralalero Tralala",
       "email": "tralalerotralala@gmail.com",
+      "password": "123456",
       "phone": "999484999",
       "address": "Av. Primavera 1750, Lima 15023",
+      "avatar": "https://via.placeholder.com/150"
+    },
+    {
+      "id": "user2",
+      "name": "Juan Pérez",
+      "email": "juan@test.com",
+      "password": "123456",
+      "phone": "987654321",
+      "address": "Av. Larco 123, Miraflores",
+      "avatar": "https://via.placeholder.com/150"
+    },
+    {
+      "id": "user3",
+      "name": "María García",
+      "email": "maria@test.com",
+      "password": "123456",
+      "phone": "912345678",
+      "address": "Av. Arequipa 456, San Isidro",
       "avatar": "https://via.placeholder.com/150"
     }
   ],

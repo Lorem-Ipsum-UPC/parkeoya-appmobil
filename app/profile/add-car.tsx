@@ -1,7 +1,8 @@
 import { api } from '@/lib/data';
+import { StorageService } from '@/lib/storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Alert,
     ScrollView,
@@ -28,6 +29,21 @@ export default function AddCarScreen() {
   const [model, setModel] = useState('');
   const [plate, setPlate] = useState('');
   const [selectedColor, setSelectedColor] = useState(COLORS[0]);
+  const [userId, setUserId] = useState<string>('');
+
+  useEffect(() => {
+    loadUserData();
+  }, []);
+
+  const loadUserData = async () => {
+    const currentUser = await StorageService.getCurrentUser();
+    if (!currentUser) {
+      Alert.alert('Session Expired', 'Please login again');
+      router.replace('/(auth)/sign-in');
+      return;
+    }
+    setUserId(currentUser.id);
+  };
 
   const handleAddVehicle = async () => {
     if (!model.trim() || !plate.trim()) {
@@ -35,9 +51,14 @@ export default function AddCarScreen() {
       return;
     }
 
+    if (!userId) {
+      Alert.alert('Error', 'User not found. Please login again');
+      return;
+    }
+
     try {
       await api.addVehicle({
-        userId: 'user1',
+        userId: userId,
         brand: model,
         model: model,
         plate: plate.toUpperCase(),

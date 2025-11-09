@@ -46,6 +46,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  password?: string;
   phone: string;
   avatar: string;
   address?: string;
@@ -95,6 +96,28 @@ let database = {
 
 // Servicio de datos local
 class LocalDataService {
+  // Authentication
+  async login(email: string, password: string): Promise<User> {
+    const user = database.users.find(
+      (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password
+    );
+    if (!user) {
+      throw new Error('Invalid email or password');
+    }
+    // Retornar usuario sin la contraseña
+    const { password: _, ...userWithoutPassword } = user;
+    return Promise.resolve(userWithoutPassword as User);
+  }
+
+  async getUserByEmail(email: string): Promise<User | null> {
+    const user = database.users.find((u) => u.email.toLowerCase() === email.toLowerCase());
+    if (!user) {
+      return Promise.resolve(null);
+    }
+    const { password: _, ...userWithoutPassword } = user;
+    return Promise.resolve(userWithoutPassword as User);
+  }
+
   // Parkings
   async getParkings(): Promise<Parking[]> {
     return Promise.resolve([...database.parkings]);

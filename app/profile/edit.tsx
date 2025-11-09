@@ -1,4 +1,5 @@
 import { api, User } from '@/lib/data';
+import { StorageService } from '@/lib/storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -30,7 +31,14 @@ export default function EditProfileScreen() {
 
   const loadUserData = async () => {
     try {
-      const userData = await api.getUser('user1');
+      const currentUser = await StorageService.getCurrentUser();
+      if (!currentUser) {
+        Alert.alert('Session Expired', 'Please login again');
+        router.replace('/(auth)/sign-in');
+        return;
+      }
+      
+      const userData = await api.getUser(currentUser.id);
       setUser(userData);
       setName(userData.name);
       setEmail(userData.email);
@@ -46,12 +54,20 @@ export default function EditProfileScreen() {
       return;
     }
 
+    if (!user) {
+      Alert.alert('Error', 'User not found');
+      return;
+    }
+
     try {
-      await api.updateUser('user1', {
+      const updatedUser = await api.updateUser(user.id, {
         name,
         email,
         phone,
       });
+
+      // Actualizar usuario en storage
+      await StorageService.setCurrentUser(updatedUser);
 
       Alert.alert('Success', 'Profile updated successfully', [
         { text: 'OK', onPress: () => router.back() },

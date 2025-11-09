@@ -1,13 +1,37 @@
+import { api } from '@/lib/data';
+import { StorageService } from '@/lib/storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const logo = require('../../assets/images/parkeoya_logo.png');
 
 export default function SignInScreen() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('signin');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSignIn = async () => {
+    if (!email.trim() || !password.trim()) {
+      Alert.alert('Error', 'Please enter email and password');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const user = await api.login(email.trim(), password);
+      await StorageService.setCurrentUser(user);
+      router.replace('/(tabs)');
+    } catch (error) {
+      Alert.alert('Error', 'Invalid email or password');
+      console.error('Login error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <LinearGradient
@@ -54,6 +78,8 @@ export default function SignInScreen() {
               placeholderTextColor="#999"
               keyboardType="email-address"
               autoCapitalize="none"
+              value={email}
+              onChangeText={setEmail}
             />
           </View>
 
@@ -69,15 +95,27 @@ export default function SignInScreen() {
               placeholder="Insert password"
               placeholderTextColor="#999"
               secureTextEntry
+              value={password}
+              onChangeText={setPassword}
             />
           </View>
 
           <TouchableOpacity 
-            style={styles.button}
-            onPress={() => router.push('/(tabs)')}
+            style={[styles.button, isLoading && styles.buttonDisabled]}
+            onPress={handleSignIn}
+            disabled={isLoading}
           >
-            <Text style={styles.buttonText}>Sign in</Text>
+            <Text style={styles.buttonText}>
+              {isLoading ? 'Signing in...' : 'Sign in'}
+            </Text>
           </TouchableOpacity>
+
+          {/* Credenciales de prueba */}
+          <View style={styles.testCredentials}>
+            <Text style={styles.testTitle}>Test Credentials:</Text>
+            <Text style={styles.testText}>Email: tralalerotralala@gmail.com</Text>
+            <Text style={styles.testText}>Password: 123456</Text>
+          </View>
         </View>
       </View>
     </LinearGradient>
@@ -167,9 +205,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 10,
   },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
   buttonText: {
     color: 'white',
     fontSize: 18,
     fontWeight: '600',
+  },
+  testCredentials: {
+    marginTop: 20,
+    padding: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 12,
+  },
+  testTitle: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  testText: {
+    color: 'white',
+    fontSize: 12,
+    marginBottom: 4,
   },
 });

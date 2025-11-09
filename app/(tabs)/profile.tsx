@@ -1,8 +1,10 @@
 import { api, Parking, User, Vehicle } from '@/lib/data';
+import { StorageService } from '@/lib/storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
+    Alert,
     Dimensions,
     Image,
     ScrollView,
@@ -26,12 +28,24 @@ export default function ProfileScreen() {
 
   const loadUserData = async () => {
     try {
-      // Cargar usuario
-      const userData = await api.getUser('user1');
+      // Cargar usuario actual logueado
+      const currentUser = await StorageService.getCurrentUser();
+      
+      if (!currentUser) {
+        Alert.alert('Session Expired', 'Please login again', [
+          {
+            text: 'OK',
+            onPress: () => router.replace('/(auth)/sign-in'),
+          },
+        ]);
+        return;
+      }
+
+      const userData = await api.getUser(currentUser.id);
       setUser(userData);
 
-      // Cargar vehículos
-      const vehiclesData = await api.getVehicles('user1');
+      // Cargar vehículos del usuario logueado
+      const vehiclesData = await api.getVehicles(currentUser.id);
       setVehicles(vehiclesData);
 
       // Cargar lugares recientes
@@ -40,6 +54,23 @@ export default function ProfileScreen() {
     } catch (error) {
       console.error('Error loading user data:', error);
     }
+  };
+
+  const handleLogout = async () => {
+    Alert.alert('Logout', 'Are you sure you want to logout?', [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      {
+        text: 'Logout',
+        style: 'destructive',
+        onPress: async () => {
+          await StorageService.removeCurrentUser();
+          router.replace('/(auth)/sign-in');
+        },
+      },
+    ]);
   };
 
   const renderCarIcon = (color: string) => (
@@ -170,6 +201,14 @@ export default function ProfileScreen() {
             <Text style={styles.noPaymentsText}>No tiene pagos registrados</Text>
           </View>
         </View>
+
+        {/* Logout Button */}
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Ionicons name="log-out-outline" size={24} color="white" />
+          <Text style={styles.logoutText}>Logout</Text>
+        </TouchableOpacity>
+
+        <View style={{ height: 100 }} />
       </ScrollView>
     </View>
   );
@@ -450,5 +489,21 @@ const styles = StyleSheet.create({
   noPaymentsText: {
     fontSize: 16,
     color: '#95A5A6',
+  },
+  logoutButton: {
+    backgroundColor: '#E74C3C',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 12,
+    marginTop: 24,
+    marginHorizontal: 20,
+    gap: 8,
+  },
+  logoutText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '600',
   },
 });

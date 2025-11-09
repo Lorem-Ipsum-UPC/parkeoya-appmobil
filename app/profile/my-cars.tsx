@@ -1,4 +1,5 @@
 import { api, Vehicle } from '@/lib/data';
+import { StorageService } from '@/lib/storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -14,6 +15,7 @@ import {
 export default function MyCarsScreen() {
   const router = useRouter();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [userId, setUserId] = useState<string>('');
 
   useEffect(() => {
     loadVehicles();
@@ -21,7 +23,14 @@ export default function MyCarsScreen() {
 
   const loadVehicles = async () => {
     try {
-      const data = await api.getVehicles('user1');
+      const currentUser = await StorageService.getCurrentUser();
+      if (!currentUser) {
+        Alert.alert('Session Expired', 'Please login again');
+        router.replace('/(auth)/sign-in');
+        return;
+      }
+      setUserId(currentUser.id);
+      const data = await api.getVehicles(currentUser.id);
       setVehicles(data);
     } catch (error) {
       console.error('Error loading vehicles:', error);
