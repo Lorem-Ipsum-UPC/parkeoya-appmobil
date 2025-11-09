@@ -18,21 +18,52 @@
         {
           "floor": 1,
           "spots": [
-            { "id": "A1", "status": "available", "type": "regular" },
-            { "id": "A2", "status": "occupied", "type": "regular" },
-            { "id": "A3", "status": "available", "type": "regular" },
-            { "id": "A4", "status": "reserved", "type": "disabled" },
-            { "id": "A5", "status": "available", "type": "regular" },
-            { "id": "A6", "status": "occupied", "type": "ev" }
+            { "id": "17", "status": "available", "type": "regular" },
+            { "id": "18", "status": "occupied", "type": "regular" },
+            { "id": "19", "status": "available", "type": "regular" },
+            { "id": "20", "status": "available", "type": "regular" },
+            { "id": "21", "status": "reserved", "type": "regular" },
+            { "id": "22", "status": "occupied", "type": "regular" },
+            { "id": "23", "status": "available", "type": "regular" },
+            { "id": "24", "status": "available", "type": "regular" },
+            { "id": "25", "status": "occupied", "type": "regular" },
+            { "id": "26", "status": "available", "type": "regular" },
+            { "id": "27", "status": "available", "type": "regular" },
+            { "id": "28", "status": "reserved", "type": "regular" }
           ]
         },
         {
           "floor": 2,
           "spots": [
-            { "id": "B1", "status": "available", "type": "regular" },
-            { "id": "B2", "status": "available", "type": "regular" },
-            { "id": "B3", "status": "occupied", "type": "regular" },
-            { "id": "B4", "status": "available", "type": "disabled" }
+            { "id": "17", "status": "available", "type": "regular" },
+            { "id": "18", "status": "available", "type": "regular" },
+            { "id": "19", "status": "occupied", "type": "regular" },
+            { "id": "20", "status": "available", "type": "regular" },
+            { "id": "21", "status": "available", "type": "regular" },
+            { "id": "22", "status": "reserved", "type": "regular" },
+            { "id": "23", "status": "available", "type": "regular" },
+            { "id": "24", "status": "occupied", "type": "regular" },
+            { "id": "25", "status": "available", "type": "regular" },
+            { "id": "26", "status": "available", "type": "regular" },
+            { "id": "27", "status": "reserved", "type": "regular" },
+            { "id": "28", "status": "available", "type": "regular" }
+          ]
+        },
+        {
+          "floor": 3,
+          "spots": [
+            { "id": "17", "status": "occupied", "type": "regular" },
+            { "id": "18", "status": "occupied", "type": "regular" },
+            { "id": "19", "status": "occupied", "type": "regular" },
+            { "id": "20", "status": "occupied", "type": "regular" },
+            { "id": "21", "status": "reserved", "type": "regular" },
+            { "id": "22", "status": "reserved", "type": "regular" },
+            { "id": "23", "status": "reserved", "type": "regular" },
+            { "id": "24", "status": "reserved", "type": "regular" },
+            { "id": "25", "status": "occupied", "type": "regular" },
+            { "id": "26", "status": "occupied", "type": "regular" },
+            { "id": "27", "status": "occupied", "type": "regular" },
+            { "id": "28", "status": "occupied", "type": "regular" }
           ]
         }
       ]

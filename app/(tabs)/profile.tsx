@@ -1,3 +1,4 @@
+import CarImage from '@/components/ui/CarImage';
 import { api, Parking, User, Vehicle } from '@/lib/data';
 import { StorageService } from '@/lib/storage';
 import { Ionicons } from '@expo/vector-icons';
@@ -73,17 +74,6 @@ export default function ProfileScreen() {
     ]);
   };
 
-  const renderCarIcon = (color: string) => (
-    <View style={[styles.carIcon, { backgroundColor: color }]}>
-      <View style={styles.carShape}>
-        <View style={styles.carBody} />
-        <View style={styles.carTop} />
-        <View style={[styles.carWheel, styles.carWheelFront]} />
-        <View style={[styles.carWheel, styles.carWheelBack]} />
-      </View>
-    </View>
-  );
-
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -142,7 +132,14 @@ export default function ProfileScreen() {
               style={styles.carItem}
               onPress={() => router.push('/profile/my-cars')}
             >
-              {renderCarIcon(vehicle.colorHex || '#E74C3C')}
+              <View style={styles.carIcon}>
+                <CarImage
+                  colorHex={vehicle.colorHex}
+                  color={vehicle.color}
+                  width={60}
+                  height={40}
+                />
+              </View>
               <View style={styles.carInfo}>
                 <Text style={styles.carBrand}>{vehicle.brand} {vehicle.color.toLowerCase()}</Text>
                 <Text style={styles.carPlate}>{vehicle.plate}</Text>
@@ -348,44 +345,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
-  },
-  carShape: {
-    width: 60,
-    height: 30,
-    position: 'relative',
-  },
-  carBody: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 15,
-    backgroundColor: 'white',
-    borderRadius: 4,
-  },
-  carTop: {
-    position: 'absolute',
-    top: 5,
-    left: 15,
-    right: 10,
-    height: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 4,
-  },
-  carWheel: {
-    position: 'absolute',
-    bottom: -2,
-    width: 8,
-    height: 8,
-    backgroundColor: '#34495E',
-    borderRadius: 4,
-  },
-  carWheelFront: {
-    right: 8,
-  },
-  carWheelBack: {
-    left: 8,
+    backgroundColor: '#F5F5F5',
   },
   carInfo: {
     flex: 1,

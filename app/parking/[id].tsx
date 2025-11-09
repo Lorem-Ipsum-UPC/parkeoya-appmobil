@@ -120,7 +120,7 @@ export default function ParkingDetailsScreen() {
 
             <TouchableOpacity
               style={styles.reserveButton}
-              onPress={() => router.push(`/parking/reserve?id=${parking.id}`)}
+              onPress={() => router.push(`/parking/select-parking?id=${parking.id}`)}
             >
               <Text style={styles.reserveButtonText}>Reserve now</Text>
             </TouchableOpacity>

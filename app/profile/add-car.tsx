@@ -1,3 +1,4 @@
+import CarImage from '@/components/ui/CarImage';
 import { api } from '@/lib/data';
 import { StorageService } from '@/lib/storage';
 import { Ionicons } from '@expo/vector-icons';
@@ -76,17 +77,6 @@ export default function AddCarScreen() {
     }
   };
 
-  const renderCarIcon = () => (
-    <View style={[styles.carIconContainer, { backgroundColor: selectedColor.hex }]}>
-      <View style={styles.carShape}>
-        <View style={styles.carBody} />
-        <View style={styles.carTop} />
-        <View style={[styles.carWheel, styles.carWheelFront]} />
-        <View style={[styles.carWheel, styles.carWheelBack]} />
-      </View>
-    </View>
-  );
-
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -107,7 +97,14 @@ export default function AddCarScreen() {
             <Ionicons name="close" size={24} color="#7F8C8D" />
           </TouchableOpacity>
 
-          {renderCarIcon()}
+          <View style={styles.carIconContainer}>
+            <CarImage
+              colorHex={selectedColor.hex}
+              color={selectedColor.name}
+              width={180}
+              height={90}
+            />
+          </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Model</Text>
@@ -231,44 +228,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 24,
-  },
-  carShape: {
-    width: 140,
-    height: 70,
-    position: 'relative',
-  },
-  carBody: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 35,
-    backgroundColor: 'white',
-    borderRadius: 8,
-  },
-  carTop: {
-    position: 'absolute',
-    top: 10,
-    left: 30,
-    right: 20,
-    height: 28,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 8,
-  },
-  carWheel: {
-    position: 'absolute',
-    bottom: -4,
-    width: 18,
-    height: 18,
-    backgroundColor: '#34495E',
-    borderRadius: 9,
-  },
-  carWheelFront: {
-    right: 18,
-  },
-  carWheelBack: {
-    left: 18,
+    backgroundColor: '#F5F5F5',
   },
   inputGroup: {
     marginBottom: 20,
