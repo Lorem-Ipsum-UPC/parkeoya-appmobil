@@ -4,19 +4,17 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
     Image,
-    Modal,
     ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
 
 export default function ParkingDetailsScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [parking, setParking] = useState<Parking | null>(null);
-  const [showModal, setShowModal] = useState(true);
 
   useEffect(() => {
     loadParkingDetails();
@@ -48,7 +46,6 @@ export default function ParkingDetailsScreen() {
   };
 
   const handleClose = () => {
-    setShowModal(false);
     router.back();
   };
 
@@ -57,20 +54,20 @@ export default function ParkingDetailsScreen() {
   }
 
   return (
-    <Modal
-      visible={showModal}
-      animationType="slide"
-      transparent={true}
-      onRequestClose={handleClose}
-    >
-      <View style={styles.modalOverlay}>
+    <View style={styles.modalOverlay}>
+
         <View style={styles.modalContent}>
           {/* Close Button */}
           <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
             <Ionicons name="close" size={32} color="#2C3E50" />
           </TouchableOpacity>
 
-          <ScrollView showsVerticalScrollIndicator={false}>
+          <ScrollView 
+            showsVerticalScrollIndicator={false}
+            bounces={true}
+            scrollEventThrottle={16}
+            contentContainerStyle={styles.scrollContent}
+          >
             {/* Parking Name */}
             <Text style={styles.parkingName}>{parking.name}</Text>
 
@@ -127,17 +124,24 @@ export default function ParkingDetailsScreen() {
             >
               <Text style={styles.reserveButtonText}>Reserve now</Text>
             </TouchableOpacity>
+
+            {/* Spacer para el navbar */}
+            <View style={{ height: 100 }} />
           </ScrollView>
         </View>
-      </View>
-    </Modal>
+ 
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
     justifyContent: 'flex-end',
   },
   modalContent: {
@@ -145,9 +149,19 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingTop: 24,
-    paddingHorizontal: 24,
-    paddingBottom: 40,
     maxHeight: '85%',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  scrollContent: {
+    paddingHorizontal: 24,
+    paddingBottom: 100,
   },
   closeButton: {
     position: 'absolute',
