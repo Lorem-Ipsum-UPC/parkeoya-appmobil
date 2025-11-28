@@ -1,9 +1,9 @@
-import { api } from '@/lib/data';
+import { authService } from '@/features/auth/services/authService';
 import { StorageService } from '@/lib/storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const logo = require('../../assets/images/parkeoya_logo.png');
 
@@ -15,19 +15,47 @@ export default function SignInScreen() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSignIn = async () => {
+    // Validate inputs
     if (!email.trim() || !password.trim()) {
       Alert.alert('Error', 'Please enter email and password');
       return;
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      Alert.alert('Error', 'Please enter a valid email address');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const user = await api.login(email.trim(), password);
-      await StorageService.setCurrentUser(user);
+      // Sign in using the real API
+      const authenticatedUser = await authService.signIn({
+        email: email.trim(),
+        password: password,
+      });
+
+      // Get driver profile
+      const driverProfile = await authService.getDriverProfile(
+        authenticatedUser.id,
+        authenticatedUser.token
+      );
+
+      // Save authentication data
+      await StorageService.setAuthData({
+        user: authenticatedUser,
+        driver: driverProfile,
+      });
+
+      // Navigate to main app
       router.replace('/(tabs)');
-    } catch (error) {
-      Alert.alert('Error', 'Invalid email or password');
+    } catch (error: any) {
       console.error('Login error:', error);
+      Alert.alert(
+        'Sign In Failed',
+        error.message || 'Invalid email or password. Please try again.'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -105,16 +133,19 @@ export default function SignInScreen() {
             onPress={handleSignIn}
             disabled={isLoading}
           >
-            <Text style={styles.buttonText}>
-              {isLoading ? 'Signing in...' : 'Sign in'}
-            </Text>
+            {isLoading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text style={styles.buttonText}>Sign in</Text>
+            )}
           </TouchableOpacity>
 
-          {/* Credenciales de prueba */}
-          <View style={styles.testCredentials}>
-            <Text style={styles.testTitle}>Test Credentials:</Text>
-            <Text style={styles.testText}>Email: tralalerotralala@gmail.com</Text>
-            <Text style={styles.testText}>Password: 123456</Text>
+          {/* Info for drivers */}
+          <View style={styles.driverInfo}>
+            <Text style={styles.infoTitle}>🚗 Driver Access Only</Text>
+            <Text style={styles.infoText}>
+              This app is exclusively for drivers. Create your driver account to start parking with ParkeoYa.
+            </Text>
           </View>
         </View>
       </View>
@@ -213,21 +244,21 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
-  testCredentials: {
+  driverInfo: {
     marginTop: 20,
     padding: 16,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 12,
   },
-  testTitle: {
+  infoTitle: {
     color: 'white',
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 8,
   },
-  testText: {
+  infoText: {
     color: 'white',
-    fontSize: 12,
-    marginBottom: 4,
+    fontSize: 14,
+    lineHeight: 20,
   },
 });

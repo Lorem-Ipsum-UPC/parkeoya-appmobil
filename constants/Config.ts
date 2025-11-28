@@ -7,21 +7,14 @@
 // - Dispositivo físico: http://TU_IP_LOCAL:3000 (ejemplo: http://192.168.1.100:3000)
 
 export const Config = {
-  // Para obtener tu IP local:
-  // Windows: ipconfig (busca IPv4 Address)
-  // Mac/Linux: ifconfig (busca inet)
-  API_BASE_URL: __DEV__ 
-    ? 'http://10.0.2.2:3000'  // Android Emulator por defecto
-    : 'http://localhost:3000',
-  
-  // Si estás usando dispositivo físico, descomenta y usa tu IP:
-  // API_BASE_URL: 'http://192.168.1.100:3000',
+  // ParkeoYa Backend API
+  API_BASE_URL: 'https://parkeoya-backend-latest-1.onrender.com',
   
   // Timeout para requests
-  API_TIMEOUT: 10000,
+  API_TIMEOUT: 30000,
   
-  // Usuario de prueba
-  DEFAULT_USER_ID: 'user1',
+  // API Version
+  API_VERSION: 'v1',
 };
 
 // Para encontrar tu IP local:

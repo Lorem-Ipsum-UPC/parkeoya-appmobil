@@ -1,7 +1,19 @@
+import { authService } from '@/features/auth/services/authService';
+import { StorageService } from '@/lib/storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+    ActivityIndicator,
+    Alert,
+    Image,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
+} from 'react-native';
 
 const logo = require('../../assets/images/parkeoya_logo.png');
 
@@ -9,6 +21,103 @@ export default function SignUpScreen() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('signup');
   const [agreed, setAgreed] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Form fields
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [dni, setDni] = useState('');
+  const [city, setCity] = useState('');
+  const [country, setCountry] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  const validateForm = (): string | null => {
+    if (!fullName.trim()) return 'Please enter your full name';
+    if (!email.trim()) return 'Please enter your email';
+    if (!phone.trim()) return 'Please enter your phone number';
+    if (!dni.trim()) return 'Please enter your DNI';
+    if (!city.trim()) return 'Please enter your city';
+    if (!country.trim()) return 'Please enter your country';
+    if (!password) return 'Please enter a password';
+    if (!confirmPassword) return 'Please confirm your password';
+    
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      return 'Please enter a valid email address';
+    }
+
+    // Password validation
+    if (password.length < 6) {
+      return 'Password must be at least 6 characters long';
+    }
+
+    if (password !== confirmPassword) {
+      return 'Passwords do not match';
+    }
+
+    if (!agreed) {
+      return 'Please agree to the Terms and Conditions';
+    }
+
+    return null;
+  };
+
+  const handleSignUp = async () => {
+    const validationError = validateForm();
+    if (validationError) {
+      Alert.alert('Validation Error', validationError);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Register driver using the real API
+      const authenticatedUser = await authService.signUpDriver({
+        email: email.trim(),
+        password: password,
+        fullName: fullName.trim(),
+        city: city.trim(),
+        country: country.trim(),
+        phone: phone.trim(),
+        dni: dni.trim(),
+      });
+
+      // Get driver profile
+      const driverProfile = await authService.getDriverProfile(
+        authenticatedUser.id,
+        authenticatedUser.token
+      );
+
+      // Save authentication data
+      await StorageService.setAuthData({
+        user: authenticatedUser,
+        driver: driverProfile,
+      });
+
+      // Show success message
+      Alert.alert(
+        'Success!',
+        'Your driver account has been created successfully.',
+        [
+          {
+            text: 'OK',
+            onPress: () => router.replace('/(tabs)'),
+          },
+        ]
+      );
+    } catch (error: any) {
+      console.error('Sign up error:', error);
+      Alert.alert(
+        'Registration Failed',
+        error.message || 'Unable to create your account. Please try again.'
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <LinearGradient
@@ -48,42 +157,95 @@ export default function SignUpScreen() {
         {/* Form */}
         <View style={styles.form}>
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Username</Text>
+            <Text style={styles.label}>Full Name *</Text>
             <TextInput
               style={styles.input}
-              placeholder="Insert name"
+              placeholder="Enter your full name"
               placeholderTextColor="#999"
+              value={fullName}
+              onChangeText={setFullName}
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email</Text>
+            <Text style={styles.label}>Email *</Text>
             <TextInput
               style={styles.input}
-              placeholder="Insert email"
+              placeholder="Enter your email"
               placeholderTextColor="#999"
               keyboardType="email-address"
               autoCapitalize="none"
+              value={email}
+              onChangeText={setEmail}
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Phone Number</Text>
+            <Text style={styles.label}>Phone Number *</Text>
             <TextInput
               style={styles.input}
-              placeholder="Insert number"
+              placeholder="Enter your phone number"
               placeholderTextColor="#999"
               keyboardType="phone-pad"
+              value={phone}
+              onChangeText={setPhone}
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Password</Text>
+            <Text style={styles.label}>DNI *</Text>
             <TextInput
               style={styles.input}
-              placeholder="Insert password"
+              placeholder="Enter your DNI"
+              placeholderTextColor="#999"
+              value={dni}
+              onChangeText={setDni}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>City *</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your city"
+              placeholderTextColor="#999"
+              value={city}
+              onChangeText={setCity}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Country *</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your country"
+              placeholderTextColor="#999"
+              value={country}
+              onChangeText={setCountry}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Password *</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Create a password (min. 6 characters)"
               placeholderTextColor="#999"
               secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Confirm Password *</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Confirm your password"
+              placeholderTextColor="#999"
+              secureTextEntry
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
             />
           </View>
 
@@ -101,11 +263,24 @@ export default function SignUpScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity 
-            style={styles.button}
-            onPress={() => router.push('/(tabs)')}
+            style={[styles.button, isLoading && styles.buttonDisabled]}
+            onPress={handleSignUp}
+            disabled={isLoading}
           >
-            <Text style={styles.buttonText}>Sign up</Text>
+            {isLoading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text style={styles.buttonText}>Create Driver Account</Text>
+            )}
           </TouchableOpacity>
+
+          {/* Driver registration info */}
+          <View style={styles.driverInfo}>
+            <Text style={styles.infoTitle}>🚗 Driver Registration</Text>
+            <Text style={styles.infoText}>
+              Create your driver account to access parking spots across the city. All fields are required.
+            </Text>
+          </View>
         </View>
       </ScrollView>
     </LinearGradient>
@@ -217,9 +392,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 10,
   },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
   buttonText: {
     color: 'white',
     fontSize: 18,
     fontWeight: '600',
+  },
+  driverInfo: {
+    marginTop: 10,
+    padding: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 12,
+  },
+  infoTitle: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  infoText: {
+    color: 'white',
+    fontSize: 14,
+    lineHeight: 20,
   },
 });
