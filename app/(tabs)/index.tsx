@@ -1,8 +1,12 @@
-import { mockParkings, Parking } from '@/lib/data';
+import { parkingService } from '@/features/parking/services/parkingService';
+import { ParkingResource } from '@/features/parking/types/parking.types';
 import { Ionicons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
+    ActivityIndicator,
+    Alert,
     Dimensions,
     ScrollView,
     StyleSheet,
@@ -17,12 +21,59 @@ const { width } = Dimensions.get('window');
 export default function HomeScreen() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
-  const [recentParkings, setRecentParkings] = useState<Parking[]>([]);
+  const [recentParkings, setRecentParkings] = useState<ParkingResource[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [userLocation, setUserLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
 
   useEffect(() => {
-    // Simular carga de datos
-    setRecentParkings(mockParkings);
+    loadParkings();
+    getUserLocation();
   }, []);
+
+  const getUserLocation = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status === 'granted') {
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.High,
+        });
+        setUserLocation({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        });
+      }
+    } catch (error) {
+      console.error('Error getting location:', error);
+    }
+  };
+
+  const loadParkings = async () => {
+    try {
+      setIsLoading(true);
+      const parkings = await parkingService.getAllParkings();
+      // Show top 5 parkings
+      setRecentParkings(parkings.slice(0, 5));
+    } catch (error) {
+      console.error('Error loading parkings:', error);
+      Alert.alert('Error', 'Could not load parkings. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const calculateDistance = (lat: number, lng: number): string => {
+    if (!userLocation) return 'N/A';
+    const distance = parkingService.calculateDistance(
+      userLocation.latitude,
+      userLocation.longitude,
+      lat,
+      lng
+    );
+    return `${distance.toFixed(1)} km`;
+  };
 
   return (
     <View style={styles.container}>
@@ -67,36 +118,59 @@ export default function HomeScreen() {
         style={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {/* Recent Place */}
-        <View style={styles.recentSection}>
-          <Text style={styles.sectionTitle}>Recent Place</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.parkingCardsContainer}
-          >
-            {recentParkings.map((parking) => (
-              <TouchableOpacity
-                key={parking.id}
-                style={styles.parkingCard}
-                onPress={() => router.push(`/parking/${parking.id}`)}
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#1B5E6F" />
+            <Text style={styles.loadingText}>Loading parkings...</Text>
+          </View>
+        ) : (
+          <>
+            {/* Recent Place */}
+            <View style={styles.recentSection}>
+              <Text style={styles.sectionTitle}>Available Parkings</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.parkingCardsContainer}
               >
-                <View style={styles.cardHeader}>
-                  <Text style={styles.cardTitle} numberOfLines={1}>
-                    {parking.name}
-                  </Text>
-                  <Ionicons name="chevron-forward" size={20} color="#2C3E50" />
-                </View>
-                <Text style={styles.cardAddress} numberOfLines={1}>
-                  {parking.address}
-                </Text>
-                <Text style={styles.cardDistance}>
-                  {parking.distance} - {parking.currency} {parking.pricePerHour.toFixed(2)}/hour
-                </Text>
-                
-                {/* Mini Map Placeholder */}
-                <View style={styles.mapPlaceholder}>
-                  <View style={styles.mapGrid}>
+                {recentParkings.map((parking) => (
+                  <TouchableOpacity
+                    key={parking.id}
+                    style={styles.parkingCard}
+                    onPress={() => router.push(`/parking/${parking.id}`)}
+                  >
+                    <View style={styles.cardHeader}>
+                      <Text style={styles.cardTitle} numberOfLines={1}>
+                        {parking.name}
+                      </Text>
+                      <Ionicons name="chevron-forward" size={20} color="#2C3E50" />
+                    </View>
+                    <Text style={styles.cardAddress} numberOfLines={1}>
+                      {parking.address}, {parking.city}
+                    </Text>
+                    <Text style={styles.cardDistance}>
+                      {calculateDistance(parking.lat, parking.lng)} - S/. {parking.ratePerHour.toFixed(2)}/hour
+                    </Text>
+                    
+                    {/* Availability Info */}
+                    <View style={styles.availabilityRow}>
+                      <View style={styles.availabilityBadge}>
+                        <Ionicons name="car-sport" size={14} color="#27AE60" />
+                        <Text style={styles.availabilityText}>
+                          {parking.availableSpots}/{parking.totalSpots} spots
+                        </Text>
+                      </View>
+                      {parking.rating > 0 && (
+                        <View style={styles.ratingBadge}>
+                          <Ionicons name="star" size={14} color="#FFC107" />
+                          <Text style={styles.ratingText}>{parking.rating.toFixed(1)}</Text>
+                        </View>
+                      )}
+                    </View>
+                    
+                    {/* Mini Map Placeholder */}
+                    <View style={styles.mapPlaceholder}>
+                      <View style={styles.mapGrid}>
                     {[...Array(12)].map((_, i) => (
                       <View key={i} style={styles.gridLine} />
                     ))}
@@ -115,17 +189,19 @@ export default function HomeScreen() {
         <View style={styles.actionButtons}>
           <TouchableOpacity
             style={styles.actionButton}
-            onPress={() => router.push('/parking/select-parking')}
+            onPress={() => router.push('/(tabs)/map')}
           >
-            <Text style={styles.actionButtonText}>Search Parking</Text>
+            <Text style={styles.actionButtonText}>View on Map</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.actionButton}
             onPress={() => router.push('/(tabs)/reservation')}
           >
-            <Text style={styles.actionButtonText}>Reservations</Text>
+            <Text style={styles.actionButtonText}>My Reservations</Text>
           </TouchableOpacity>
         </View>
+        </>
+        )}
       </ScrollView>
     </View>
   );
@@ -260,7 +336,51 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#2C3E50',
     fontWeight: '500',
+    marginBottom: 8,
+  },
+  availabilityRow: {
+    flexDirection: 'row',
+    gap: 8,
     marginBottom: 12,
+  },
+  availabilityBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E8F5E9',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  availabilityText: {
+    fontSize: 11,
+    color: '#27AE60',
+    fontWeight: '600',
+  },
+  ratingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF9E6',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  ratingText: {
+    fontSize: 11,
+    color: '#F57C00',
+    fontWeight: '600',
+  },
+  loadingContainer: {
+    paddingVertical: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#1B5E6F',
+    fontWeight: '600',
   },
   mapPlaceholder: {
     height: 140,
