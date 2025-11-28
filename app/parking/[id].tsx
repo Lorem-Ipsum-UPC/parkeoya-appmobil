@@ -5,6 +5,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
+    Alert,
     Image,
     ScrollView,
     StyleSheet,
@@ -26,12 +27,26 @@ export default function ParkingDetailsScreen() {
   const loadParkingDetails = async () => {
     try {
       if (id) {
+        console.log('Loading parking with ID:', id);
         setIsLoading(true);
         const data = await parkingService.getParkingById(Number(id));
+        console.log('Parking data received:', data);
         setParking(data);
+      } else {
+        console.log('No ID provided');
+        setIsLoading(false);
       }
     } catch (error) {
       console.error('Error loading parking details:', error);
+      setIsLoading(false);
+      Alert.alert(
+        'Error',
+        'No se pudo cargar la información del estacionamiento. Por favor intenta de nuevo.',
+        [
+          { text: 'Volver', onPress: () => router.back() },
+          { text: 'Reintentar', onPress: () => loadParkingDetails() }
+        ]
+      );
     } finally {
       setIsLoading(false);
     }
@@ -57,144 +72,156 @@ export default function ParkingDetailsScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#1B5E6F" />
-            <Text style={styles.loadingText}>Loading parking details...</Text>
-          </View>
+      <View style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#1B5E6F" />
+          <Text style={styles.loadingText}>Loading parking details...</Text>
         </View>
       </View>
     );
   }
 
   if (!parking) {
-    return null;
+    return (
+      <View style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>No se encontró el estacionamiento</Text>
+          <TouchableOpacity 
+            style={styles.reserveButton}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.reserveButtonText}>Volver</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
   }
 
   return (
-    <View style={styles.modalOverlay}>
-      <View style={styles.modalContent}>
-        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-          {/* Close Button */}
-          <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
-            <Ionicons name="close" size={28} color="#2C3E50" />
-          </TouchableOpacity>
+    <View style={styles.container}>
+      <ScrollView 
+        style={styles.scrollView} 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Close Button */}
+        <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
+          <Ionicons name="close" size={28} color="#2C3E50" />
+        </TouchableOpacity>
 
-          {/* Parking Image */}
-          <Image
-            source={{ 
-              uri: parking.imageUrl || 'https://via.placeholder.com/400x200?text=Parking+Image' 
-            }}
-            style={styles.parkingImage}
-            resizeMode="cover"
-          />
+        {/* Parking Image */}
+        <Image
+          source={{ 
+            uri: parking.imageUrl || 'https://via.placeholder.com/400x200?text=Parking+Image' 
+          }}
+          style={styles.parkingImage}
+          resizeMode="cover"
+        />
 
-          {/* Parking Name */}
-          <Text style={styles.parkingName}>{parking.name}</Text>
+        {/* Parking Name */}
+        <Text style={styles.parkingName}>{parking.name}</Text>
 
-          {/* Address */}
-          <View style={styles.infoRow}>
-            <Ionicons name="location" size={20} color="#1B5E6F" />
-            <Text style={styles.infoText}>{parking.address}, {parking.city}</Text>
-          </View>
+        {/* Address */}
+        <View style={styles.infoRow}>
+          <Ionicons name="location" size={20} color="#1B5E6F" />
+          <Text style={styles.infoText}>{parking.address}, {parking.city}</Text>
+        </View>
 
-          {/* Price */}
-          <View style={styles.infoRow}>
-            <Ionicons name="cash" size={20} color="#27AE60" />
-            <Text style={styles.infoText}>
-              S/. {parking.ratePerHour.toFixed(2)}/hour
+        {/* Price */}
+        <View style={styles.infoRow}>
+          <Ionicons name="cash" size={20} color="#27AE60" />
+          <Text style={styles.infoText}>
+            S/. {parking.ratePerHour.toFixed(2)}/hour
+          </Text>
+        </View>
+
+        {/* Daily and Monthly Rates */}
+        <View style={styles.infoRow}>
+          <Ionicons name="calendar" size={20} color="#3498DB" />
+          <Text style={styles.infoText}>
+            Daily: S/. {parking.dailyRate.toFixed(2)} | Monthly: S/. {parking.monthlyRate.toFixed(2)}
+          </Text>
+        </View>
+
+        {/* Availability */}
+        <View style={styles.infoRow}>
+          <Ionicons name="car" size={20} color="#1B5E6F" />
+          <Text style={styles.infoText}>
+            {parking.availableSpots} available / {parking.totalSpots} total
+          </Text>
+        </View>
+
+        {/* Rating */}
+        <View style={styles.ratingSection}>
+          <Text style={styles.ratingLabel}>Rating</Text>
+          <View style={styles.starsRow}>
+            {renderStars(parking.rating)}
+            <Text style={styles.ratingNumber}>
+              {parking.rating > 0 ? parking.rating.toFixed(1) : 'No ratings'}
             </Text>
           </View>
-
-          {/* Daily and Monthly Rates */}
-          <View style={styles.infoRow}>
-            <Ionicons name="calendar" size={20} color="#3498DB" />
-            <Text style={styles.infoText}>
-              Daily: S/. {parking.dailyRate.toFixed(2)} | Monthly: S/. {parking.monthlyRate.toFixed(2)}
+          {parking.ratingCount > 0 && (
+            <Text style={styles.distanceText}>
+              Based on {parking.ratingCount} review{parking.ratingCount !== 1 ? 's' : ''}
             </Text>
-          </View>
-
-          {/* Availability */}
-          <View style={styles.infoRow}>
-            <Ionicons name="car" size={20} color="#1B5E6F" />
-            <Text style={styles.infoText}>
-              {parking.availableSpots} available / {parking.totalSpots} total
-            </Text>
-          </View>
-
-          {/* Rating */}
-          <View style={styles.ratingSection}>
-            <Text style={styles.ratingLabel}>Rating</Text>
-            <View style={styles.starsRow}>
-              {renderStars(parking.rating)}
-              <Text style={styles.ratingNumber}>
-                {parking.rating > 0 ? parking.rating.toFixed(1) : 'No ratings'}
-              </Text>
-            </View>
-            {parking.ratingCount > 0 && (
-              <Text style={styles.distanceText}>
-                Based on {parking.ratingCount} review{parking.ratingCount !== 1 ? 's' : ''}
-              </Text>
-            )}
-          </View>
-
-          {/* Operating Hours */}
-          <View style={styles.infoRow}>
-            <Ionicons name="time" size={20} color="#E67E22" />
-            <Text style={styles.infoText}>
-              {parking.open24Hours 
-                ? '24/7 Open' 
-                : `${parking.openingTime || 'N/A'} - ${parking.closingTime || 'N/A'}`}
-            </Text>
-          </View>
-
-          {/* Description */}
-          {parking.description && (
-            <View style={styles.descriptionSection}>
-              <Text style={styles.descriptionLabel}>Description</Text>
-              <Text style={styles.descriptionText}>{parking.description}</Text>
-            </View>
           )}
+        </View>
 
-          {/* Spot Types */}
-          <View style={styles.spotTypesSection}>
-            <Text style={styles.spotTypesLabel}>Available Spot Types</Text>
-            <View style={styles.spotTypeRow}>
-              <View style={styles.spotTypeItem}>
-                <Ionicons name="car-outline" size={24} color="#1B5E6F" />
-                <Text style={styles.spotTypeText}>Regular: {parking.regularSpots}</Text>
-              </View>
-              <View style={styles.spotTypeItem}>
-                <Ionicons name="accessibility" size={24} color="#3498DB" />
-                <Text style={styles.spotTypeText}>Disabled: {parking.disabledSpots}</Text>
-              </View>
-              <View style={styles.spotTypeItem}>
-                <Ionicons name="flash" size={24} color="#27AE60" />
-                <Text style={styles.spotTypeText}>Electric: {parking.electricSpots}</Text>
-              </View>
+        {/* Operating Hours */}
+        <View style={styles.infoRow}>
+          <Ionicons name="time" size={20} color="#E67E22" />
+          <Text style={styles.infoText}>
+            {parking.open24Hours 
+              ? '24/7 Open' 
+              : `${parking.openingTime || 'N/A'} - ${parking.closingTime || 'N/A'}`}
+          </Text>
+        </View>
+
+        {/* Description */}
+        {parking.description && (
+          <View style={styles.descriptionSection}>
+            <Text style={styles.descriptionLabel}>Description</Text>
+            <Text style={styles.descriptionText}>{parking.description}</Text>
+          </View>
+        )}
+
+        {/* Spot Types */}
+        <View style={styles.spotTypesSection}>
+          <Text style={styles.spotTypesLabel}>Available Spot Types</Text>
+          <View style={styles.spotTypeRow}>
+            <View style={styles.spotTypeItem}>
+              <Ionicons name="car-outline" size={24} color="#1B5E6F" />
+              <Text style={styles.spotTypeText}>Regular: {parking.regularSpots}</Text>
+            </View>
+            <View style={styles.spotTypeItem}>
+              <Ionicons name="accessibility" size={24} color="#3498DB" />
+              <Text style={styles.spotTypeText}>Disabled: {parking.disabledSpots}</Text>
+            </View>
+            <View style={styles.spotTypeItem}>
+              <Ionicons name="flash" size={24} color="#27AE60" />
+              <Text style={styles.spotTypeText}>Electric: {parking.electricSpots}</Text>
             </View>
           </View>
+        </View>
 
-          {/* Buttons */}
-          <TouchableOpacity
-            style={styles.reviewsButton}
-            onPress={() => router.push(`/parking/reviews?id=${parking.id}`)}
-          >
-            <Text style={styles.reviewsButtonText}>View Reviews</Text>
-          </TouchableOpacity>
+        {/* Buttons */}
+        <TouchableOpacity
+          style={styles.reviewsButton}
+          onPress={() => router.push(`/parking/reviews?id=${parking.id}`)}
+        >
+          <Text style={styles.reviewsButtonText}>View Reviews</Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.reserveButton}
-            onPress={() => router.push(`/parking/select-parking?id=${parking.id}`)}
-          >
-            <Text style={styles.reserveButtonText}>Reserve now</Text>
-          </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.reserveButton}
+          onPress={() => router.push(`/parking/select-parking?id=${parking.id}`)}
+        >
+          <Text style={styles.reserveButtonText}>Reserve now</Text>
+        </TouchableOpacity>
 
-          {/* Spacer para el navbar */}
-          <View style={{ height: 100 }} />
-        </ScrollView>
-      </View>
+        {/* Spacer para el navbar */}
+        <View style={{ height: 100 }} />
+      </ScrollView>
     </View>
   );
 }
@@ -202,56 +229,43 @@ export default function ParkingDetailsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'transparent',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
     backgroundColor: 'white',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingTop: 24,
-    maxHeight: '85%',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: -2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 10,
-  },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 100,
-  },
-  closeButton: {
-    position: 'absolute',
-    top: 16,
-    right: 16,
-    zIndex: 10,
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  parkingName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#2C3E50',
-    marginBottom: 16,
   },
   scrollView: {
     flex: 1,
-    paddingHorizontal: 24,
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 40,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 10,
+    width: 44,
+    height: 44,
+    backgroundColor: 'white',
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   parkingImage: {
     width: '100%',
-    height: 200,
+    height: 220,
     borderRadius: 16,
+    marginBottom: 20,
+  },
+  parkingName: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#2C3E50',
     marginBottom: 20,
   },
   infoRow: {
