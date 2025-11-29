@@ -236,12 +236,12 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingTop: 60,
+    paddingTop: 70,
     paddingBottom: 40,
   },
   closeButton: {
     position: 'absolute',
-    top: 10,
+    top: 50,
     right: 10,
     zIndex: 10,
     width: 44,

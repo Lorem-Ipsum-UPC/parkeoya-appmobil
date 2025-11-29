@@ -1,9 +1,13 @@
-import { api, Parking, PaymentMethod, Vehicle } from '@/lib/data';
+import { parkingService } from '@/features/parking/services/parkingService';
+import { ParkingResource } from '@/features/parking/types/parking.types';
+import { profileService } from '@/features/profile/services/profileService';
+import { reservationService } from '@/features/reservation/services/reservationService';
 import { StorageService } from '@/lib/storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
+    ActivityIndicator,
     Alert,
     Dimensions,
     Image,
@@ -17,22 +21,34 @@ import {
 
 const { width } = Dimensions.get('window');
 
+// Temporary payment method type (until API is integrated)
+interface PaymentMethod {
+  id: string;
+  type: string;
+  last4: string;
+  isDefault: boolean;
+}
+
 export default function ReserveScreen() {
   const router = useRouter();
-  const { parkingId, spotId } = useLocalSearchParams<{ parkingId: string; spotId: string }>();
+  const { parkingId, spotId, spotLabel } = useLocalSearchParams<{ 
+    parkingId: string; 
+    spotId: string;
+    spotLabel?: string;
+  }>();
   
-  const [parking, setParking] = useState<Parking | null>(null);
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [parking, setParking] = useState<ParkingResource | null>(null);
+  const [vehiclePlate, setVehiclePlate] = useState<string>('');
+  const [driverId, setDriverId] = useState<number | null>(null);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
-  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethod | null>(null);
   const [date, setDate] = useState(new Date());
   const [startTime, setStartTime] = useState('08:00');
   const [endTime, setEndTime] = useState('12:00');
-  const [showVehicleSelect, setShowVehicleSelect] = useState(false);
   const [showPaymentSelect, setShowPaymentSelect] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isLoadingData, setIsLoadingData] = useState(true);
 
   useEffect(() => {
     loadData();
@@ -40,44 +56,76 @@ export default function ReserveScreen() {
 
   const loadData = async () => {
     try {
-      const currentUser = await StorageService.getCurrentUser();
-      if (!currentUser) {
-        Alert.alert('Error', 'Please log in to continue');
+      setIsLoadingData(true);
+      
+      // Get user auth data
+      const authData = await StorageService.getAuthData();
+      if (!authData) {
+        Alert.alert('Error', 'Por favor inicia sesión para continuar');
         router.replace('/(auth)/sign-in');
         return;
       }
 
+      // Load parking details
       if (parkingId) {
-        const parkingData = await api.getParkingById(parkingId);
+        const parkingData = await parkingService.getParkingById(Number(parkingId));
         setParking(parkingData);
       }
 
-      const userVehicles = await api.getVehicles(currentUser.id);
-      setVehicles(userVehicles);
-      if (userVehicles.length > 0) {
-        setSelectedVehicle(userVehicles[0]);
+      // Load driver profile to get vehicle plate and driverId
+      try {
+        const profile = await profileService.getDriverProfile();
+        console.log('Driver profile loaded:', profile);
+        
+        // Set vehicle plate from profile (assuming first vehicle or default)
+        // You may need to adjust this based on your actual profile structure
+        if (profile.vehiclePlate) {
+          setVehiclePlate(profile.vehiclePlate);
+        }
+        
+        // Set driverId from profile
+        if (profile.driverId) {
+          setDriverId(profile.driverId);
+        } else if (profile.userId) {
+          // Fallback to userId if driverId is not available
+          setDriverId(profile.userId);
+        }
+        
+        console.log('Vehicle plate:', profile.vehiclePlate);
+        console.log('Driver ID:', profile.driverId || profile.userId);
+      } catch (profileError) {
+        console.error('Error loading profile:', profileError);
+        Alert.alert('Advertencia', 'No se pudo cargar el perfil. Por favor verifica tus datos de vehículo.');
       }
 
-      const userPayments = await api.getPaymentMethods(currentUser.id);
-      setPaymentMethods(userPayments);
-      if (userPayments.length > 0) {
-        setSelectedPayment(userPayments[0]);
-      }
+      // Mock payment methods for now (until payment API is integrated)
+      const mockPayments: PaymentMethod[] = [
+        { id: '1', type: 'Visa', last4: '4242', isDefault: true },
+        { id: '2', type: 'Mastercard', last4: '5555', isDefault: false },
+      ];
+      setPaymentMethods(mockPayments);
+      setSelectedPayment(mockPayments[0]);
+      
     } catch (error) {
       console.error('Error loading data:', error);
+      Alert.alert('Error', 'No se pudo cargar la información');
+    } finally {
+      setIsLoadingData(false);
     }
   };
 
   const calculateDuration = (): number => {
-    const start = parseInt(startTime.split(':')[0]);
-    const end = parseInt(endTime.split(':')[0]);
-    return end - start;
+    const [startHour, startMin] = startTime.split(':').map(Number);
+    const [endHour, endMin] = endTime.split(':').map(Number);
+    const startMinutes = startHour * 60 + startMin;
+    const endMinutes = endHour * 60 + endMin;
+    return (endMinutes - startMinutes) / 60; // Return hours as decimal
   };
 
   const calculateTotal = (): number => {
     if (!parking) return 0;
     const duration = calculateDuration();
-    return parking.pricePerHour * duration;
+    return parking.ratePerHour * duration;
   };
 
   const formatDate = (date: Date): string => {
@@ -86,41 +134,56 @@ export default function ReserveScreen() {
     const year = String(date.getFullYear()).slice(-2);
     return `${day}/${month}/${year}`;
   };
+  
+  const formatDateForAPI = (date: Date): string => {
+    return reservationService.formatDate(date);
+  };
 
   const handlePay = async () => {
-    if (!selectedVehicle) {
-      Alert.alert('Error', 'Please select a vehicle');
+    if (!vehiclePlate || vehiclePlate.trim() === '') {
+      Alert.alert('Error', 'No se encontró la placa del vehículo. Por favor actualiza tu perfil.');
+      return;
+    }
+
+    if (!driverId) {
+      Alert.alert('Error', 'No se encontró el ID del conductor');
       return;
     }
 
     if (!selectedPayment) {
-      Alert.alert('Error', 'Please select a payment method');
+      Alert.alert('Error', 'Por favor selecciona un método de pago');
+      return;
+    }
+
+    if (!spotId) {
+      Alert.alert('Error', 'No se seleccionó un espacio de estacionamiento');
       return;
     }
 
     setLoading(true);
     try {
-      const currentUser = await StorageService.getCurrentUser();
-      if (!currentUser || !parking) return;
-
-      const newReservation = {
-        userId: currentUser.id,
-        parkingId: parking.id,
-        spotId: spotId || '20',
-        vehicleId: selectedVehicle.id,
-        startTime: `${formatDate(date)}T${startTime}:00Z`,
-        endTime: `${formatDate(date)}T${endTime}:00Z`,
-        status: 'active' as const,
-        totalCost: calculateTotal(),
+      const reservationData = {
+        driverId: driverId,
+        vehiclePlate: vehiclePlate,
+        parkingId: Number(parkingId),
+        parkingSpotId: spotId,
+        date: formatDateForAPI(date),
+        startTime: startTime,
+        endTime: endTime,
       };
 
-      await api.createReservation(newReservation);
+      console.log('Creating reservation with data:', reservationData);
+
+      const newReservation = await reservationService.createReservation(reservationData);
+      
+      console.log('Reservation created successfully:', newReservation);
+      
       setLoading(false);
       setShowSuccessModal(true);
     } catch (error) {
       setLoading(false);
       console.error('Error creating reservation:', error);
-      Alert.alert('Error', 'Failed to create reservation');
+      Alert.alert('Error', error instanceof Error ? error.message : 'No se pudo crear la reserva');
     }
   };
 
@@ -128,6 +191,17 @@ export default function ReserveScreen() {
     setShowSuccessModal(false);
     router.replace('/(tabs)');
   };
+
+  if (isLoadingData) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#1B5E6F" />
+          <Text style={styles.loadingText}>Cargando información...</Text>
+        </View>
+      </View>
+    );
+  }
 
   if (!parking) {
     return null;
@@ -166,13 +240,13 @@ export default function ReserveScreen() {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Parking Info Card */}
         <View style={styles.parkingCard}>
-          <Image source={{ uri: parking.image }} style={styles.parkingImage} />
+          <Image source={{ uri: parking.imageUrl }} style={styles.parkingImage} />
           <View style={styles.parkingInfo}>
             <Text style={styles.parkingName}>{parking.name}</Text>
             <Text style={styles.parkingAddress}>{parking.address}</Text>
             <View style={styles.spotInfo}>
               <Ionicons name="location" size={18} color="#1B5E6F" />
-              <Text style={styles.spotText}>Spot: F2-{spotId || '20'}</Text>
+              <Text style={styles.spotText}>Spot: {spotLabel || spotId || 'N/A'}</Text>
             </View>
           </View>
         </View>
@@ -195,7 +269,7 @@ export default function ReserveScreen() {
               <Text style={styles.timeLabel}>Start Time</Text>
               <TouchableOpacity style={styles.timeSelector}>
                 <Ionicons name="time-outline" size={24} color="#2C3E50" />
-                <Text style={styles.timeText}>{startTime} AM</Text>
+                <Text style={styles.timeText}>{startTime}</Text>
                 <Ionicons name="chevron-down" size={24} color="#95A5A6" />
               </TouchableOpacity>
             </View>
@@ -204,7 +278,7 @@ export default function ReserveScreen() {
               <Text style={styles.timeLabel}>End Time</Text>
               <TouchableOpacity style={styles.timeSelector}>
                 <Ionicons name="time-outline" size={24} color="#2C3E50" />
-                <Text style={styles.timeText}>{endTime} PM</Text>
+                <Text style={styles.timeText}>{endTime}</Text>
                 <Ionicons name="chevron-down" size={24} color="#95A5A6" />
               </TouchableOpacity>
             </View>
@@ -214,25 +288,20 @@ export default function ReserveScreen() {
         {/* Vehicle Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Vehicle</Text>
-          <TouchableOpacity 
-            style={styles.selector}
-            onPress={() => setShowVehicleSelect(true)}
-          >
-            {selectedVehicle ? (
-              <View style={styles.selectedItem}>
-                <Ionicons name="car" size={24} color="#1B5E6F" />
-                <View style={styles.selectedItemInfo}>
-                  <Text style={styles.selectedItemText}>
-                    {selectedVehicle.brand} {selectedVehicle.color}
-                  </Text>
-                  <Text style={styles.selectedItemSubtext}>{selectedVehicle.plate}</Text>
-                </View>
+          <View style={styles.selector}>
+            <View style={styles.selectedItem}>
+              <Ionicons name="car" size={24} color="#1B5E6F" />
+              <View style={styles.selectedItemInfo}>
+                <Text style={styles.selectedItemText}>Vehículo Registrado</Text>
+                <Text style={styles.selectedItemSubtext}>{vehiclePlate || 'No registrado'}</Text>
               </View>
-            ) : (
-              <Text style={styles.selectorPlaceholder}>Select a vehicle</Text>
-            )}
-            <Ionicons name="chevron-down" size={24} color="#95A5A6" />
-          </TouchableOpacity>
+            </View>
+          </View>
+          {!vehiclePlate && (
+            <Text style={styles.warningText}>
+              ⚠️ Actualiza tu perfil para agregar la placa de tu vehículo
+            </Text>
+          )}
         </View>
 
         {/* Payment Method Section */}
@@ -245,15 +314,17 @@ export default function ReserveScreen() {
             {selectedPayment ? (
               <View style={styles.selectedItem}>
                 <Ionicons 
-                  name={selectedPayment.type === 'credit' ? 'card' : 'cash'} 
+                  name="card" 
                   size={24} 
                   color="#1B5E6F" 
                 />
                 <View style={styles.selectedItemInfo}>
                   <Text style={styles.selectedItemText}>
-                    {selectedPayment.cardNumber}
+                    {selectedPayment.type} •••• {selectedPayment.last4}
                   </Text>
-                  <Text style={styles.selectedItemSubtext}>{selectedPayment.cardHolder}</Text>
+                  <Text style={styles.selectedItemSubtext}>
+                    {selectedPayment.isDefault ? 'Default payment' : 'Payment method'}
+                  </Text>
                 </View>
               </View>
             ) : (
@@ -267,11 +338,11 @@ export default function ReserveScreen() {
         <View style={styles.totalSection}>
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Duration</Text>
-            <Text style={styles.totalValue}>{calculateDuration()} hours</Text>
+            <Text style={styles.totalValue}>{calculateDuration().toFixed(1)} hours</Text>
           </View>
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Hourly Rate</Text>
-            <Text style={styles.totalValue}>S/. {parking.pricePerHour.toFixed(2)}</Text>
+            <Text style={styles.totalValue}>S/. {parking.ratePerHour.toFixed(2)}</Text>
           </View>
           <View style={styles.divider} />
           <View style={styles.totalRow}>
@@ -302,48 +373,6 @@ export default function ReserveScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Vehicle Select Modal */}
-      <Modal
-        visible={showVehicleSelect}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowVehicleSelect(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Vehicle</Text>
-              <TouchableOpacity onPress={() => setShowVehicleSelect(false)}>
-                <Ionicons name="close" size={28} color="#2C3E50" />
-              </TouchableOpacity>
-            </View>
-            <ScrollView>
-              {vehicles.map((vehicle) => (
-                <TouchableOpacity
-                  key={vehicle.id}
-                  style={styles.modalItem}
-                  onPress={() => {
-                    setSelectedVehicle(vehicle);
-                    setShowVehicleSelect(false);
-                  }}
-                >
-                  <Ionicons name="car" size={24} color="#1B5E6F" />
-                  <View style={styles.modalItemInfo}>
-                    <Text style={styles.modalItemText}>
-                      {vehicle.brand} {vehicle.color}
-                    </Text>
-                    <Text style={styles.modalItemSubtext}>{vehicle.plate}</Text>
-                  </View>
-                  {selectedVehicle?.id === vehicle.id && (
-                    <Ionicons name="checkmark-circle" size={24} color="#1B5E6F" />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
-
       {/* Payment Method Select Modal */}
       <Modal
         visible={showPaymentSelect}
@@ -370,15 +399,17 @@ export default function ReserveScreen() {
                   }}
                 >
                   <Ionicons 
-                    name={payment.type === 'credit' ? 'card' : 'cash'} 
+                    name="card" 
                     size={24} 
                     color="#1B5E6F" 
                   />
                   <View style={styles.modalItemInfo}>
                     <Text style={styles.modalItemText}>
-                      {payment.cardNumber}
+                      {payment.type} •••• {payment.last4}
                     </Text>
-                    <Text style={styles.modalItemSubtext}>{payment.cardHolder}</Text>
+                    <Text style={styles.modalItemSubtext}>
+                      {payment.isDefault ? 'Default' : 'Secondary'}
+                    </Text>
                   </View>
                   {selectedPayment?.id === payment.id && (
                     <Ionicons name="checkmark-circle" size={24} color="#1B5E6F" />
@@ -775,5 +806,22 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 18,
     fontWeight: '600',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F5F6FA',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#7F8C8D',
+  },
+  warningText: {
+    marginTop: 8,
+    fontSize: 12,
+    color: '#E67E22',
+    fontStyle: 'italic',
   },
 });
