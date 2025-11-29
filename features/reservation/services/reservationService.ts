@@ -8,9 +8,8 @@ import { StorageService } from '@/lib/storage';
 import {
     CreateReservationRequest,
     ReservationErrorResponse,
-    ReservationListResponse,
     ReservationResource,
-    UpdateReservationRequest,
+    UpdateReservationRequest
 } from '../types/reservation.types';
 
 class ReservationService {
