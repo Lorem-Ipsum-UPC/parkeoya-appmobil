@@ -1,25 +1,32 @@
 import CarImage from '@/components/ui/CarImage';
-import { api, Parking, ParkingSpot } from '@/lib/data';
+import { parkingService } from '@/features/parking/services/parkingService';
+import { spotService } from '@/features/parking/services/spotService';
+import { ParkingResource } from '@/features/parking/types/parking.types';
+import { ParkingSpotResource } from '@/features/parking/types/spot.types';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    Dimensions,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 const { width } = Dimensions.get('window');
 
 export default function SelectParkingScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const [parking, setParking] = useState<Parking | null>(null);
-  const [selectedFloor, setSelectedFloor] = useState(2);
-  const [selectedSpot, setSelectedSpot] = useState<ParkingSpot | null>(null);
+  const [parking, setParking] = useState<ParkingResource | null>(null);
+  const [allSpots, setAllSpots] = useState<ParkingSpotResource[]>([]);
+  const [selectedFloor, setSelectedFloor] = useState(1);
+  const [selectedSpot, setSelectedSpot] = useState<ParkingSpotResource | null>(null);
   const [spotRanges, setSpotRanges] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     loadParkingData();
@@ -28,38 +35,60 @@ export default function SelectParkingScreen() {
   const loadParkingData = async () => {
     try {
       if (id) {
-        const data = await api.getParkingById(id);
-        setParking(data);
+        setIsLoading(true);
         
-        // Generar rangos de spots
-        if (data.floors.length > 0) {
+        // Load parking details
+        const parkingData = await parkingService.getParkingById(Number(id));
+        setParking(parkingData);
+        
+        // Load parking spots
+        const spotsData = await spotService.getParkingSpots(Number(id));
+        setAllSpots(spotsData || []);
+        
+        if (spotsData && spotsData.length > 0) {
+          // Generate spot ranges based on actual data
           const ranges: string[] = [];
-          let start = 17;
+          const maxRow = Math.max(...spotsData.map(s => s.rowIndex));
+          const rowsPerRange = Math.ceil((maxRow + 1) / 4);
+          
           for (let i = 0; i < 4; i++) {
-            const end = start + 3;
-            ranges.push(`${start} - ${end}`);
-            start = end + 1;
+            const start = i * rowsPerRange;
+            const end = Math.min((i + 1) * rowsPerRange - 1, maxRow);
+            if (start <= maxRow) {
+              ranges.push(`${start} - ${end}`);
+            }
           }
           setSpotRanges(ranges);
         }
       }
     } catch (error) {
-      console.error('Error loading parking:', error);
+      console.error('Error loading parking data:', error);
+      Alert.alert('Error', 'No se pudo cargar la información del estacionamiento');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const getFloorSpots = (): ParkingSpot[] => {
-    if (!parking || !parking.floors) return [];
-    const floor = parking.floors.find((f) => f.floor === selectedFloor);
-    return floor ? floor.spots : [];
+  const getFloorSpots = (): ParkingSpotResource[] => {
+    if (!allSpots.length) return [];
+    
+    // Divide spots into "floors" based on rowIndex
+    // Floor 1: rows 0-3, Floor 2: rows 4-7, Floor 3: rows 8+
+    const rowsPerFloor = Math.ceil((parking?.totalRows || 10) / 3);
+    const minRow = (selectedFloor - 1) * rowsPerFloor;
+    const maxRow = selectedFloor * rowsPerFloor - 1;
+    
+    return allSpots.filter(spot => 
+      spot.rowIndex >= minRow && spot.rowIndex <= maxRow
+    );
   };
 
-  const getSpotStatus = (spot: ParkingSpot): 'available' | 'occupied' | 'reserved' => {
-    return spot.status;
+  const getSpotStatus = (spot: ParkingSpotResource): 'available' | 'occupied' | 'reserved' => {
+    return spot.status.toLowerCase() as 'available' | 'occupied' | 'reserved';
   };
 
-  const handleSpotSelect = (spot: ParkingSpot) => {
-    if (spot.status === 'available') {
+  const handleSpotSelect = (spot: ParkingSpotResource) => {
+    if (spot.status === 'AVAILABLE') {
       setSelectedSpot(spot);
     }
   };
@@ -71,29 +100,53 @@ export default function SelectParkingScreen() {
         params: {
           parkingId: parking.id,
           spotId: selectedSpot.id,
+          spotLabel: selectedSpot.label,
         },
       });
     }
   };
 
   const getFloorAvailability = (floorNumber: number): string => {
-    if (!parking || !parking.floors) return '0/0';
-    const floor = parking.floors.find((f) => f.floor === floorNumber);
-    if (!floor) return '0/0';
+    if (!allSpots.length) return '0/0';
     
-    const available = floor.spots.filter((s) => s.status === 'available').length;
-    const total = floor.spots.length;
+    const rowsPerFloor = Math.ceil((parking?.totalRows || 10) / 3);
+    const minRow = (floorNumber - 1) * rowsPerFloor;
+    const maxRow = floorNumber * rowsPerFloor - 1;
+    
+    const floorSpots = allSpots.filter(spot => 
+      spot.rowIndex >= minRow && spot.rowIndex <= maxRow
+    );
+    
+    const available = floorSpots.filter((s) => s.status === 'AVAILABLE').length;
+    const total = floorSpots.length;
     return `${available}/${total}`;
   };
 
   const getFloorStatus = (floorNumber: number): 'full' | 'available' => {
-    if (!parking || !parking.floors) return 'available';
-    const floor = parking.floors.find((f) => f.floor === floorNumber);
-    if (!floor) return 'available';
+    if (!allSpots.length) return 'available';
     
-    const available = floor.spots.filter((s) => s.status === 'available').length;
+    const rowsPerFloor = Math.ceil((parking?.totalRows || 10) / 3);
+    const minRow = (floorNumber - 1) * rowsPerFloor;
+    const maxRow = floorNumber * rowsPerFloor - 1;
+    
+    const floorSpots = allSpots.filter(spot => 
+      spot.rowIndex >= minRow && spot.rowIndex <= maxRow
+    );
+    
+    const available = floorSpots.filter((s) => s.status === 'AVAILABLE').length;
     return available === 0 ? 'full' : 'available';
   };
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#1B5E6F" />
+          <Text style={styles.loadingText}>Cargando espacios...</Text>
+        </View>
+      </View>
+    );
+  }
 
   if (!parking) {
     return null;
@@ -210,7 +263,7 @@ export default function SelectParkingScreen() {
                       />
                     </View>
                   ) : (
-                    <Text style={styles.spotId}>F{selectedFloor} - {spot.id}</Text>
+                    <Text style={styles.spotId}>{spot.label}</Text>
                   )}
                   <Text style={[
                     styles.spotStatus,
@@ -261,7 +314,7 @@ export default function SelectParkingScreen() {
                       />
                     </View>
                   ) : (
-                    <Text style={styles.spotId}>F{selectedFloor} - {spot.id}</Text>
+                    <Text style={styles.spotId}>{spot.label}</Text>
                   )}
                   <Text style={[
                     styles.spotStatus,
@@ -533,5 +586,15 @@ const styles = StyleSheet.create({
     color: '#2C3E50',
     fontSize: 18,
     fontWeight: '600',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#7F8C8D',
   },
 });
