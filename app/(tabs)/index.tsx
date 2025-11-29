@@ -5,15 +5,15 @@ import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Dimensions,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 const { width } = Dimensions.get('window');
@@ -27,6 +27,7 @@ export default function HomeScreen() {
     latitude: number;
     longitude: number;
   } | null>(null);
+  const [userAddress, setUserAddress] = useState<string>('Getting location...');
 
   useEffect(() => {
     loadParkings();
@@ -44,9 +45,30 @@ export default function HomeScreen() {
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
         });
+
+        // Get address from coordinates
+        const address = await Location.reverseGeocodeAsync({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        });
+
+        if (address && address.length > 0) {
+          const addr = address[0];
+          const formattedAddress = [
+            addr.street,
+            addr.district || addr.city,
+          ]
+            .filter(Boolean)
+            .join(', ');
+          
+          setUserAddress(formattedAddress || 'Location found');
+        }
+      } else {
+        setUserAddress('Location permission denied');
       }
     } catch (error) {
       console.error('Error getting location:', error);
+      setUserAddress('Unable to get location');
     }
   };
 
@@ -83,7 +105,9 @@ export default function HomeScreen() {
           <Text style={styles.locationLabel}>Your Location</Text>
           <View style={styles.locationRow}>
             <Ionicons name="location-sharp" size={20} color="white" />
-            <Text style={styles.locationText}>Av. Primavera 1203</Text>
+            <Text style={styles.locationText}>
+              {userAddress}
+            </Text>
           </View>
         </View>
         <TouchableOpacity style={styles.notificationButton}>
@@ -231,13 +255,16 @@ const styles = StyleSheet.create({
   },
   locationRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 6,
+    flex: 1,
   },
   locationText: {
     color: 'white',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
+    flex: 1,
+    flexWrap: 'wrap',
   },
   notificationButton: {
     padding: 4,
