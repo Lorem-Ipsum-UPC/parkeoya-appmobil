@@ -1,9 +1,13 @@
-import { api, Parking, Reservation } from '@/lib/data';
-import { StorageService } from '@/lib/storage';
+import { parkingService } from '@/features/parking/services/parkingService';
+import { ParkingResource } from '@/features/parking/types/parking.types';
+import { profileService } from '@/features/profile/services/profileService';
+import { reservationService } from '@/features/reservation/services/reservationService';
+import { ReservationResource } from '@/features/reservation/types/reservation.types';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
+    ActivityIndicator,
     Alert,
     Modal,
     ScrollView,
@@ -15,11 +19,13 @@ import {
 
 export default function ReservationScreen() {
   const router = useRouter();
-  const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [parkings, setParkings] = useState<{ [key: string]: Parking }>({});
+  const [reservations, setReservations] = useState<ReservationResource[]>([]);
+  const [parkings, setParkings] = useState<{ [key: number]: ParkingResource }>({});
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
+  const [selectedReservation, setSelectedReservation] = useState<ReservationResource | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'all' | 'PENDING' | 'CONFIRMED' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED'>('all');
 
   useEffect(() => {
     loadReservations();
@@ -27,31 +33,53 @@ export default function ReservationScreen() {
 
   const loadReservations = async () => {
     try {
-      const currentUser = await StorageService.getCurrentUser();
-      if (!currentUser) {
-        Alert.alert('Session Expired', 'Please login again');
-        router.replace('/(auth)/sign-in');
+      setLoading(true);
+      
+      // Get driver profile to get driverId
+      const profile = await profileService.getDriverProfile();
+      console.log('Driver profile:', profile);
+      
+      const driverId = profile.driverId || profile.userId;
+      console.log('Using driverId:', driverId);
+
+      if (!driverId) {
+        Alert.alert('Error', 'No se encontró el ID del conductor');
         return;
       }
 
-      const userReservations = await api.getReservations(currentUser.id);
-      setReservations(userReservations);
+      // Get all reservations from the API
+      console.log('Fetching reservations...');
+      const allReservationsData = await reservationService.getAllDriverReservations(driverId);
+      console.log('Reservations fetched:', allReservationsData);
+      
+      setReservations(allReservationsData || []);
 
-      // Cargar información de parkings
-      const parkingData: { [key: string]: Parking } = {};
-      for (const reservation of userReservations) {
+      // Load parking information for each reservation
+      const parkingData: { [key: number]: ParkingResource } = {};
+      const reservationList = allReservationsData || [];
+      
+      for (const reservation of reservationList) {
         if (!parkingData[reservation.parkingId]) {
-          const parking = await api.getParkingById(reservation.parkingId);
-          parkingData[reservation.parkingId] = parking;
+          try {
+            const parking = await parkingService.getParkingById(reservation.parkingId);
+            parkingData[reservation.parkingId] = parking;
+          } catch (error) {
+            console.error(`Error loading parking ${reservation.parkingId}:`, error);
+          }
         }
       }
       setParkings(parkingData);
     } catch (error) {
       console.error('Error loading reservations:', error);
+      const errorMessage = error instanceof Error ? error.message : 'No se pudieron cargar las reservas';
+      Alert.alert('Error', errorMessage);
+      setReservations([]);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleCancelReservation = (reservation: Reservation) => {
+  const handleCancelReservation = (reservation: ReservationResource) => {
     setSelectedReservation(reservation);
     setShowCancelModal(true);
   };
@@ -60,7 +88,7 @@ export default function ReservationScreen() {
     if (!selectedReservation) return;
 
     try {
-      await api.cancelReservation(selectedReservation.id);
+      await reservationService.cancelReservation(selectedReservation.id);
       setShowCancelModal(false);
       setShowSuccessModal(true);
       loadReservations();
@@ -70,16 +98,55 @@ export default function ReservationScreen() {
     }
   };
 
-  const handleViewDetails = (reservationId: string) => {
+  const handleViewDetails = (reservationId: number) => {
     router.push(`/reservation/${reservationId}`);
   };
 
-  const currentReservations = reservations.filter((r) => r.status === 'active');
-  const pastReservations = reservations.filter((r) => r.status !== 'active');
+  const getStatusLabel = (status: string): string => {
+    switch (status) {
+      case 'PENDING':
+        return 'Pendiente';
+      case 'CONFIRMED':
+        return 'Confirmada';
+      case 'ACTIVE':
+        return 'Activa';
+      case 'COMPLETED':
+        return 'Completada';
+      case 'CANCELLED':
+        return 'Cancelada';
+      default:
+        return status;
+    }
+  };
 
-  const renderReservationCard = (reservation: Reservation, isCurrent: boolean) => {
+  const getStatusColor = (status: string): string => {
+    switch (status) {
+      case 'PENDING':
+        return '#F39C12';
+      case 'CONFIRMED':
+        return '#3498DB';
+      case 'ACTIVE':
+        return '#27AE60';
+      case 'COMPLETED':
+        return '#95A5A6';
+      case 'CANCELLED':
+        return '#E74C3C';
+      default:
+        return '#95A5A6';
+    }
+  };
+
+  // Filter reservations by active tab
+  const filteredReservations = activeTab === 'all' 
+    ? reservations 
+    : reservations.filter(r => r.status === activeTab);
+
+  const renderReservationCard = (reservation: ReservationResource) => {
     const parking = parkings[reservation.parkingId];
     if (!parking) return null;
+
+    const statusColor = getStatusColor(reservation.status);
+    const statusLabel = getStatusLabel(reservation.status);
 
     return (
       <View key={reservation.id} style={styles.reservationCard}>
@@ -89,21 +156,29 @@ export default function ReservationScreen() {
         >
           <View style={styles.cardTitleContainer}>
             <Text style={styles.parkingName}>{parking.name}</Text>
-            <Ionicons name="chevron-forward" size={24} color="#2C3E50" />
+            <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
+              <Text style={styles.statusText}>{statusLabel}</Text>
+            </View>
           </View>
         </TouchableOpacity>
 
         <Text style={styles.parkingAddress}>{parking.address}</Text>
-        <Text style={styles.parkingInfo}>
-          {parking.distance} - {parking.currency} {parking.pricePerHour.toFixed(2)}/hour
-        </Text>
-
-        {/* Mini Map Placeholder */}
-        <View style={styles.mapPlaceholder}>
-          <View style={styles.mapMarker}>
-            <Ionicons name="location" size={32} color="#1B5E6F" />
+        
+        <View style={styles.reservationDetails}>
+          <View style={styles.detailRow}>
+            <Ionicons name="calendar-outline" size={18} color="#7F8C8D" />
+            <Text style={styles.detailText}>{reservation.date}</Text>
           </View>
-          <Text style={styles.parkingLabel}>P</Text>
+          <View style={styles.detailRow}>
+            <Ionicons name="time-outline" size={18} color="#7F8C8D" />
+            <Text style={styles.detailText}>
+              {reservation.startTime} - {reservation.endTime}
+            </Text>
+          </View>
+          <View style={styles.detailRow}>
+            <Ionicons name="car-outline" size={18} color="#7F8C8D" />
+            <Text style={styles.detailText}>{reservation.vehiclePlate}</Text>
+          </View>
         </View>
 
         <View style={styles.buttonContainer}>
@@ -111,15 +186,15 @@ export default function ReservationScreen() {
             style={styles.viewDetailsButton}
             onPress={() => handleViewDetails(reservation.id)}
           >
-            <Text style={styles.viewDetailsButtonText}>View details</Text>
+            <Text style={styles.viewDetailsButtonText}>Ver detalles</Text>
           </TouchableOpacity>
 
-          {isCurrent && (
+          {reservation.status === 'PENDING' || reservation.status === 'CONFIRMED' && (
             <TouchableOpacity
               style={styles.cancelButton}
               onPress={() => handleCancelReservation(reservation)}
             >
-              <Text style={styles.cancelButtonText}>Cancel Reservation</Text>
+              <Text style={styles.cancelButtonText}>Cancelar</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -134,41 +209,79 @@ export default function ReservationScreen() {
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="#2C3E50" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Reservations</Text>
+        <Text style={styles.headerTitle}>Mis Reservas</Text>
         <View style={styles.backButton} />
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Current Reservations */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Current Reservations</Text>
-          {currentReservations.length > 0 ? (
-            currentReservations.map((reservation) =>
-              renderReservationCard(reservation, true)
-            )
-          ) : (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyStateText}>No current reservations</Text>
-            </View>
-          )}
-        </View>
+      {/* Status Filter Tabs */}
+      <View style={styles.tabContainer}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'all' && styles.activeTab]}
+            onPress={() => setActiveTab('all')}
+          >
+            <Text style={[styles.tabText, activeTab === 'all' && styles.activeTabText]}>
+              Todas
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'PENDING' && styles.activeTab]}
+            onPress={() => setActiveTab('PENDING')}
+          >
+            <Text style={[styles.tabText, activeTab === 'PENDING' && styles.activeTabText]}>
+              Pendientes
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'CONFIRMED' && styles.activeTab]}
+            onPress={() => setActiveTab('CONFIRMED')}
+          >
+            <Text style={[styles.tabText, activeTab === 'CONFIRMED' && styles.activeTabText]}>
+              Confirmadas
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'ACTIVE' && styles.activeTab]}
+            onPress={() => setActiveTab('ACTIVE')}
+          >
+            <Text style={[styles.tabText, activeTab === 'ACTIVE' && styles.activeTabText]}>
+              Activas
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'COMPLETED' && styles.activeTab]}
+            onPress={() => setActiveTab('COMPLETED')}
+          >
+            <Text style={[styles.tabText, activeTab === 'COMPLETED' && styles.activeTabText]}>
+              Completadas
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
 
-        {/* Past Reservations */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Past Reservations</Text>
-          {pastReservations.length > 0 ? (
-            pastReservations.map((reservation) =>
-              renderReservationCard(reservation, false)
-            )
-          ) : (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyStateText}>No past reservations</Text>
-            </View>
-          )}
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#1B5E6F" />
+          <Text style={styles.loadingText}>Cargando reservas...</Text>
         </View>
+      ) : (
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          <View style={styles.section}>
+            {filteredReservations.length > 0 ? (
+              filteredReservations.map((reservation) => renderReservationCard(reservation))
+            ) : (
+              <View style={styles.emptyState}>
+                <Ionicons name="calendar-outline" size={64} color="#BDC3C7" />
+                <Text style={styles.emptyStateText}>
+                  No hay reservas {activeTab !== 'all' ? getStatusLabel(activeTab).toLowerCase() : ''}
+                </Text>
+              </View>
+            )}
+          </View>
 
-        <View style={{ height: 100 }} />
-      </ScrollView>
+          <View style={{ height: 100 }} />
+        </ScrollView>
+      )}
 
       {/* Cancel Confirmation Modal */}
       <Modal
@@ -261,6 +374,41 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#2C3E50',
   },
+  tabContainer: {
+    backgroundColor: 'white',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  tab: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    marginHorizontal: 6,
+    borderRadius: 20,
+    backgroundColor: '#F5F5F5',
+  },
+  activeTab: {
+    backgroundColor: '#1B5E6F',
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#7F8C8D',
+  },
+  activeTabText: {
+    color: 'white',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#7F8C8D',
+  },
   content: {
     flex: 1,
   },
@@ -281,6 +429,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 1,
     borderColor: '#E0E0E0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   cardHeader: {
     marginBottom: 8,
@@ -296,10 +449,33 @@ const styles = StyleSheet.create({
     color: '#2C3E50',
     flex: 1,
   },
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: 'white',
+  },
   parkingAddress: {
     fontSize: 14,
     color: '#7F8C8D',
-    marginBottom: 4,
+    marginBottom: 12,
+  },
+  reservationDetails: {
+    marginBottom: 16,
+    gap: 8,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  detailText: {
+    fontSize: 14,
+    color: '#2C3E50',
   },
   parkingInfo: {
     fontSize: 14,
@@ -355,12 +531,14 @@ const styles = StyleSheet.create({
   emptyState: {
     backgroundColor: 'white',
     borderRadius: 16,
-    padding: 32,
+    padding: 40,
     alignItems: 'center',
   },
   emptyStateText: {
     fontSize: 16,
     color: '#95A5A6',
+    marginTop: 12,
+    textAlign: 'center',
   },
   modalOverlay: {
     flex: 1,

@@ -1,78 +1,66 @@
-import CarImage from '@/components/ui/CarImage';
-import { api, Parking, User, Vehicle } from '@/lib/data';
+import { useDriverProfile } from '@/features/profile/hooks/useDriverProfile';
 import { StorageService } from '@/lib/storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
+    ActivityIndicator,
     Alert,
     Dimensions,
-    Image,
     ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [recentParkings, setRecentParkings] = useState<Parking[]>([]);
-
-  useEffect(() => {
-    loadUserData();
-  }, []);
-
-  const loadUserData = async () => {
-    try {
-      // Cargar usuario actual logueado
-      const currentUser = await StorageService.getCurrentUser();
-      
-      if (!currentUser) {
-        Alert.alert('Session Expired', 'Please login again', [
-          {
-            text: 'OK',
-            onPress: () => router.replace('/(auth)/sign-in'),
-          },
-        ]);
-        return;
-      }
-
-      const userData = await api.getUser(currentUser.id);
-      setUser(userData);
-
-      // Cargar vehículos del usuario logueado
-      const vehiclesData = await api.getVehicles(currentUser.id);
-      setVehicles(vehiclesData);
-
-      // Cargar lugares recientes
-      const parkingsData = await api.getParkings();
-      setRecentParkings(parkingsData.slice(0, 2));
-    } catch (error) {
-      console.error('Error loading user data:', error);
-    }
-  };
+  const { profile, isLoading, error, refreshProfile } = useDriverProfile();
 
   const handleLogout = async () => {
-    Alert.alert('Logout', 'Are you sure you want to logout?', [
+    Alert.alert('Cerrar Sesión', '¿Estás seguro que deseas salir?', [
       {
-        text: 'Cancel',
+        text: 'Cancelar',
         style: 'cancel',
       },
       {
-        text: 'Logout',
+        text: 'Salir',
         style: 'destructive',
         onPress: async () => {
-          await StorageService.removeCurrentUser();
+          await StorageService.removeAuthData();
           router.replace('/(auth)/sign-in');
         },
       },
     ]);
   };
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#1B5E6F" />
+          <Text style={styles.loadingText}>Cargando perfil...</Text>
+        </View>
+      </View>
+    );
+  }
+
+  if (error || !profile) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Ionicons name="alert-circle" size={64} color="#E74C3C" />
+          <Text style={styles.errorText}>{error || 'Error al cargar el perfil'}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={refreshProfile}>
+            <Text style={styles.retryButtonText}>Reintentar</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -84,25 +72,34 @@ export default function ProfileScreen() {
         >
           <Ionicons name="arrow-back" size={24} color="#2C3E50" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>My Profile</Text>
+        <Text style={styles.headerTitle}>Mi Perfil</Text>
         <View style={styles.backButton} />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* User Profile Card */}
         <View style={styles.profileCard}>
-          <Text style={styles.cardTitle}>User Profile</Text>
+          <Text style={styles.cardTitle}>Perfil del Conductor</Text>
           
           <View style={styles.profileInfo}>
-            <Image
-              source={{ uri: user?.avatar || 'https://via.placeholder.com/150' }}
-              style={styles.avatar}
-            />
+            <View style={styles.avatarContainer}>
+              <Ionicons name="person-circle" size={80} color="#1B5E6F" />
+            </View>
             <View style={styles.userDetails}>
-              <Text style={styles.userName}>{user?.name || 'Loading...'}</Text>
-              <Text style={styles.userEmail}>{user?.email}</Text>
-              <Text style={styles.userPhone}>{user?.phone}</Text>
-              <Text style={styles.userAddress}>{user?.address}</Text>
+              <Text style={styles.userName}>{profile.fullName}</Text>
+              <Text style={styles.userEmail}>{profile.email || 'Sin email'}</Text>
+              <View style={styles.infoRow}>
+                <Ionicons name="call" size={16} color="#7F8C8D" />
+                <Text style={styles.userPhone}>{profile.phone}</Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Ionicons name="location" size={16} color="#7F8C8D" />
+                <Text style={styles.userAddress}>{profile.city}, {profile.country}</Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Ionicons name="card" size={16} color="#7F8C8D" />
+                <Text style={styles.userDni}>DNI: {profile.dni}</Text>
+              </View>
             </View>
           </View>
 
@@ -110,99 +107,68 @@ export default function ProfileScreen() {
             style={styles.editButton}
             onPress={() => router.push('/profile/edit')}
           >
-            <Text style={styles.editButtonText}>Edit Profile</Text>
+            <Ionicons name="create-outline" size={20} color="white" style={{ marginRight: 8 }} />
+            <Text style={styles.editButtonText}>Editar Perfil</Text>
           </TouchableOpacity>
         </View>
 
         {/* My Cars Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>My Cars ({vehicles.length})</Text>
+            <Text style={styles.sectionTitle}>Mis Vehículos</Text>
             <TouchableOpacity
               style={styles.addButton}
               onPress={() => router.push('/profile/add-car')}
             >
-              <Text style={styles.addButtonText}>Add new car</Text>
+              <Ionicons name="add-circle" size={20} color="#1B5E6F" style={{ marginRight: 4 }} />
+              <Text style={styles.addButtonText}>Agregar</Text>
             </TouchableOpacity>
           </View>
 
-          {vehicles.map((vehicle) => (
-            <TouchableOpacity
-              key={vehicle.id}
-              style={styles.carItem}
-              onPress={() => router.push('/profile/my-cars')}
-            >
-              <View style={styles.carIcon}>
-                <CarImage
-                  colorHex={vehicle.colorHex}
-                  color={vehicle.color}
-                  width={60}
-                  height={40}
-                />
-              </View>
-              <View style={styles.carInfo}>
-                <Text style={styles.carBrand}>{vehicle.brand} {vehicle.color.toLowerCase()}</Text>
-                <Text style={styles.carPlate}>{vehicle.plate}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Recent Place */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Recent Place</Text>
-          
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.parkingCardsContainer}
+          <TouchableOpacity
+            style={styles.carItemPlaceholder}
+            onPress={() => router.push('/profile/my-cars')}
           >
-            {recentParkings.map((parking) => (
-              <TouchableOpacity
-                key={parking.id}
-                style={styles.parkingCard}
-                onPress={() => router.push(`/parking/${parking.id}`)}
-              >
-                <View style={styles.cardHeader}>
-                  <Text style={styles.parkingName} numberOfLines={1}>
-                    {parking.name}
-                  </Text>
-                  <Ionicons name="chevron-forward" size={20} color="#2C3E50" />
-                </View>
-                <Text style={styles.parkingAddress} numberOfLines={1}>
-                  {parking.address}
-                </Text>
-                <Text style={styles.parkingDistance}>
-                  {parking.distance} - {parking.currency} {parking.pricePerHour.toFixed(2)}/hour
-                </Text>
-                
-                {/* Mini Map Placeholder */}
-                <View style={styles.mapPlaceholder}>
-                  <View style={styles.mapMarker}>
-                    <Ionicons name="location" size={32} color="#1B5E6F" />
-                  </View>
-                  <Text style={styles.parkingLabel}>P</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+            <Ionicons name="car-sport" size={40} color="#BDC3C7" />
+            <Text style={styles.placeholderText}>No hay vehículos registrados</Text>
+            <Text style={styles.placeholderSubtext}>Toca aquí para ver tus vehículos</Text>
+          </TouchableOpacity>
         </View>
 
+        {/* Recent Places Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Lugares Recientes</Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.placeholderCard}
+            onPress={() => router.push('/(tabs)/map')}
+          >
+            <Ionicons name="time-outline" size={32} color="#BDC3C7" />
+            <Text style={styles.placeholderText}>No hay lugares recientes</Text>
+            <Text style={styles.placeholderSubtext}>Busca estacionamientos en el mapa</Text>
+          </TouchableOpacity>
+        </View>
         {/* Payment History */}
         <View style={styles.section}>
-          <View style={styles.paymentHeader}>
-            <Ionicons name="time-outline" size={28} color="#2C3E50" />
-            <Text style={styles.paymentTitle}>Historial de Pagos</Text>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Historial de Pagos</Text>
           </View>
-          <View style={styles.noPaymentsContainer}>
-            <Text style={styles.noPaymentsText}>No tiene pagos registrados</Text>
-          </View>
+          <TouchableOpacity
+            style={styles.placeholderCard}
+            onPress={() => router.push('/profile/payment-history')}
+          >
+            <Ionicons name="card-outline" size={32} color="#BDC3C7" />
+            <Text style={styles.placeholderText}>No hay pagos registrados</Text>
+            <Text style={styles.placeholderSubtext}>Tus reservas aparecerán aquí</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Logout Button */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={24} color="white" />
-          <Text style={styles.logoutText}>Logout</Text>
+          <Text style={styles.logoutText}>Cerrar Sesión</Text>
         </TouchableOpacity>
 
         <View style={{ height: 100 }} />
@@ -262,6 +228,48 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: 20,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 100,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#1B5E6F',
+    fontWeight: '600',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#E74C3C',
+    textAlign: 'center',
+    marginTop: 16,
+    marginBottom: 24,
+  },
+  retryButton: {
+    backgroundColor: '#1B5E6F',
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 12,
+  },
+  retryButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  avatarContainer: {
+    marginRight: 16,
+    backgroundColor: '#F0F4F8',
+    borderRadius: 40,
+    padding: 4,
+  },
   avatar: {
     width: 100,
     height: 100,
@@ -272,32 +280,43 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
   },
-  userName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#2C3E50',
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     marginBottom: 4,
   },
+  userName: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#2C3E50',
+    marginBottom: 6,
+  },
   userEmail: {
-    fontSize: 14,
+    fontSize: 15,
     color: '#7F8C8D',
-    marginBottom: 2,
+    marginBottom: 8,
   },
   userPhone: {
     fontSize: 14,
     color: '#7F8C8D',
-    marginBottom: 8,
   },
   userAddress: {
     fontSize: 14,
-    color: '#95A5A6',
+    color: '#7F8C8D',
+  },
+  userDni: {
+    fontSize: 14,
+    color: '#7F8C8D',
   },
   editButton: {
     backgroundColor: '#1B5E6F',
     paddingVertical: 14,
-    paddingHorizontal: 32,
+    paddingHorizontal: 24,
     borderRadius: 12,
     alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   editButtonText: {
     color: 'white',
@@ -320,15 +339,42 @@ const styles = StyleSheet.create({
     color: '#2C3E50',
   },
   addButton: {
-    backgroundColor: '#D5D8DC',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    backgroundColor: '#E8F4F8',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
     borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   addButtonText: {
-    color: '#2C3E50',
+    color: '#1B5E6F',
     fontSize: 14,
     fontWeight: '600',
+  },
+  carItemPlaceholder: {
+    backgroundColor: 'white',
+    padding: 32,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  placeholderCard: {
+    backgroundColor: 'white',
+    padding: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  placeholderText: {
+    fontSize: 16,
+    color: '#7F8C8D',
+    marginTop: 12,
+    fontWeight: '600',
+  },
+  placeholderSubtext: {
+    fontSize: 14,
+    color: '#BDC3C7',
+    marginTop: 4,
   },
   carItem: {
     flexDirection: 'row',
