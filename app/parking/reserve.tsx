@@ -1,3 +1,4 @@
+import DateTimePicker from '@/components/reservation/DateTimePicker';
 import { parkingService } from '@/features/parking/services/parkingService';
 import { ParkingResource } from '@/features/parking/types/parking.types';
 import { profileService } from '@/features/profile/services/profileService';
@@ -7,21 +8,21 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  Dimensions,
-  Image,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    Dimensions,
+    Image,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
-// Temporary payment method type (until API is integrated)
+// Temporary payment method type (visual only)
 interface PaymentMethod {
   id: string;
   type: string;
@@ -38,14 +39,40 @@ export default function ReserveScreen() {
   }>();
   
   const [parking, setParking] = useState<ParkingResource | null>(null);
-  const [vehiclePlate, setVehiclePlate] = useState<string>('');
+  const [vehiclePlate, setVehiclePlate] = useState<string>('ABC-123'); // Visual only
   const [driverId, setDriverId] = useState<number | null>(null);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethod | null>(null);
   const [date, setDate] = useState(new Date());
-  const [startTime, setStartTime] = useState('08:00');
-  const [endTime, setEndTime] = useState('12:00');
+  
+  // Helper function to get next half hour
+  const getNextHalfHour = (): string => {
+    const now = new Date();
+    const minutes = now.getMinutes();
+    const hours = now.getHours();
+    
+    // Round up to next half hour
+    if (minutes <= 30) {
+      return `${String(hours).padStart(2, '0')}:30`;
+    } else {
+      const nextHour = hours + 1;
+      return `${String(nextHour).padStart(2, '0')}:00`;
+    }
+  };
+  
+  // Helper function to get one hour after a given time
+  const getOneHourLater = (time: string): string => {
+    const [hours, minutes] = time.split(':').map(Number);
+    const newHours = (hours + 1) % 24;
+    return `${String(newHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  };
+  
+  const [startTime, setStartTime] = useState(getNextHalfHour());
+  const [endTime, setEndTime] = useState(getOneHourLater(getNextHalfHour()));
   const [showPaymentSelect, setShowPaymentSelect] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showStartTimePicker, setShowStartTimePicker] = useState(false);
+  const [showEndTimePicker, setShowEndTimePicker] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
@@ -72,16 +99,10 @@ export default function ReserveScreen() {
         setParking(parkingData);
       }
 
-      // Load driver profile to get vehicle plate and driverId
+      // Load driver profile to get driverId
       try {
         const profile = await profileService.getDriverProfile();
         console.log('Driver profile loaded:', profile);
-        
-        // Set vehicle plate from profile (assuming first vehicle or default)
-        // You may need to adjust this based on your actual profile structure
-        if (profile.vehiclePlate) {
-          setVehiclePlate(profile.vehiclePlate);
-        }
         
         // Set driverId from profile
         if (profile.driverId) {
@@ -91,14 +112,14 @@ export default function ReserveScreen() {
           setDriverId(profile.userId);
         }
         
-        console.log('Vehicle plate:', profile.vehiclePlate);
         console.log('Driver ID:', profile.driverId || profile.userId);
       } catch (profileError) {
         console.error('Error loading profile:', profileError);
-        Alert.alert('Advertencia', 'No se pudo cargar el perfil. Por favor verifica tus datos de vehículo.');
+        // Set a default driverId for testing (visual simulation)
+        setDriverId(1);
       }
 
-      // Mock payment methods for now (until payment API is integrated)
+      // Mock payment methods (visual only - not sent to API)
       const mockPayments: PaymentMethod[] = [
         { id: '1', type: 'Visa', last4: '4242', isDefault: true },
         { id: '2', type: 'Mastercard', last4: '5555', isDefault: false },
@@ -140,18 +161,8 @@ export default function ReserveScreen() {
   };
 
   const handlePay = async () => {
-    if (!vehiclePlate || vehiclePlate.trim() === '') {
-      Alert.alert('Error', 'No se encontró la placa del vehículo. Por favor actualiza tu perfil.');
-      return;
-    }
-
     if (!driverId) {
       Alert.alert('Error', 'No se encontró el ID del conductor');
-      return;
-    }
-
-    if (!selectedPayment) {
-      Alert.alert('Error', 'Por favor selecciona un método de pago');
       return;
     }
 
@@ -164,7 +175,7 @@ export default function ReserveScreen() {
     try {
       const reservationData = {
         driverId: driverId,
-        vehiclePlate: vehiclePlate,
+        vehiclePlate: vehiclePlate, // Visual only value
         parkingId: Number(parkingId),
         parkingSpotId: spotId,
         date: formatDateForAPI(date),
@@ -240,7 +251,14 @@ export default function ReserveScreen() {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Parking Info Card */}
         <View style={styles.parkingCard}>
-          <Image source={{ uri: parking.imageUrl }} style={styles.parkingImage} />
+          {parking.imageUrl ? (
+            <Image source={{ uri: parking.imageUrl }} style={styles.parkingImage} />
+          ) : (
+            <View style={[styles.parkingImage, styles.imagePlaceholder]}>
+              <Ionicons name="location" size={48} color="#1B5E6F" />
+              <Text style={styles.placeholderText}>P</Text>
+            </View>
+          )}
           <View style={styles.parkingInfo}>
             <Text style={styles.parkingName}>{parking.name}</Text>
             <Text style={styles.parkingAddress}>{parking.address}</Text>
@@ -254,7 +272,10 @@ export default function ReserveScreen() {
         {/* Date Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Date</Text>
-          <TouchableOpacity style={styles.dateSelector}>
+          <TouchableOpacity 
+            style={styles.dateSelector}
+            onPress={() => setShowDatePicker(true)}
+          >
             <Ionicons name="calendar-outline" size={24} color="#2C3E50" />
             <Text style={styles.dateText}>{formatDate(date)}</Text>
             <Ionicons name="chevron-down" size={24} color="#95A5A6" />
@@ -267,7 +288,10 @@ export default function ReserveScreen() {
           <View style={styles.timeContainer}>
             <View style={styles.timeInputContainer}>
               <Text style={styles.timeLabel}>Start Time</Text>
-              <TouchableOpacity style={styles.timeSelector}>
+              <TouchableOpacity 
+                style={styles.timeSelector}
+                onPress={() => setShowStartTimePicker(true)}
+              >
                 <Ionicons name="time-outline" size={24} color="#2C3E50" />
                 <Text style={styles.timeText}>{startTime}</Text>
                 <Ionicons name="chevron-down" size={24} color="#95A5A6" />
@@ -276,7 +300,10 @@ export default function ReserveScreen() {
 
             <View style={styles.timeInputContainer}>
               <Text style={styles.timeLabel}>End Time</Text>
-              <TouchableOpacity style={styles.timeSelector}>
+              <TouchableOpacity 
+                style={styles.timeSelector}
+                onPress={() => setShowEndTimePicker(true)}
+              >
                 <Ionicons name="time-outline" size={24} color="#2C3E50" />
                 <Text style={styles.timeText}>{endTime}</Text>
                 <Ionicons name="chevron-down" size={24} color="#95A5A6" />
@@ -285,7 +312,7 @@ export default function ReserveScreen() {
           </View>
         </View>
 
-        {/* Vehicle Section */}
+        {/* Vehicle Section (Visual Only) */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Vehicle</Text>
           <View style={styles.selector}>
@@ -293,18 +320,13 @@ export default function ReserveScreen() {
               <Ionicons name="car" size={24} color="#1B5E6F" />
               <View style={styles.selectedItemInfo}>
                 <Text style={styles.selectedItemText}>Vehículo Registrado</Text>
-                <Text style={styles.selectedItemSubtext}>{vehiclePlate || 'No registrado'}</Text>
+                <Text style={styles.selectedItemSubtext}>{vehiclePlate}</Text>
               </View>
             </View>
           </View>
-          {!vehiclePlate && (
-            <Text style={styles.warningText}>
-              ⚠️ Actualiza tu perfil para agregar la placa de tu vehículo
-            </Text>
-          )}
         </View>
 
-        {/* Payment Method Section */}
+        {/* Payment Method Section (Visual Only) */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Payment Method</Text>
           <TouchableOpacity 
@@ -446,6 +468,54 @@ export default function ReserveScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Date Picker */}
+      <DateTimePicker
+        visible={showDatePicker}
+        mode="date"
+        value={date}
+        onConfirm={(value) => {
+          setDate(value as Date);
+          setShowDatePicker(false);
+        }}
+        onCancel={() => setShowDatePicker(false)}
+        minimumDate={new Date()}
+        maximumDate={(() => {
+          const tomorrow = new Date();
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          return tomorrow;
+        })()}
+      />
+
+      {/* Start Time Picker */}
+      <DateTimePicker
+        visible={showStartTimePicker}
+        mode="time"
+        value={startTime}
+        selectedDate={date}
+        onConfirm={(value) => {
+          const newStartTime = value as string;
+          setStartTime(newStartTime);
+          setEndTime(getOneHourLater(newStartTime));
+          setShowStartTimePicker(false);
+        }}
+        onCancel={() => setShowStartTimePicker(false)}
+        minuteInterval={30}
+      />
+
+      {/* End Time Picker */}
+      <DateTimePicker
+        visible={showEndTimePicker}
+        mode="time"
+        value={endTime}
+        selectedDate={date}
+        onConfirm={(value) => {
+          setEndTime(value as string);
+          setShowEndTimePicker(false);
+        }}
+        onCancel={() => setShowEndTimePicker(false)}
+        minuteInterval={30}
+      />
     </View>
   );
 }
@@ -540,6 +610,18 @@ const styles = StyleSheet.create({
   parkingImage: {
     width: '100%',
     height: 180,
+  },
+  imagePlaceholder: {
+    backgroundColor: '#E8F4F8',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  placeholderText: {
+    fontSize: 48,
+    fontWeight: 'bold',
+    color: '#1B5E6F',
+    opacity: 0.5,
+    marginTop: 12,
   },
   parkingInfo: {
     padding: 16,
@@ -818,10 +900,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#7F8C8D',
   },
-  warningText: {
+  infoText: {
     marginTop: 8,
     fontSize: 12,
-    color: '#E67E22',
+    color: '#3498DB',
     fontStyle: 'italic',
   },
 });

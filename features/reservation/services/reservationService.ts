@@ -97,7 +97,11 @@ class ReservationService {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${this.baseUrl}/reservations/driver/${driverId}`, {
+      console.log(`Fetching reservations for driver: ${driverId}`);
+      const url = `${this.baseUrl}/reservations/driver/${driverId}`;
+      console.log(`Request URL: ${url}`);
+
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -105,14 +109,40 @@ class ReservationService {
         },
       });
 
+      console.log(`Response status: ${response.status}`);
+
       if (!response.ok) {
-        throw new Error(`Failed to fetch driver reservations: ${response.status}`);
+        const errorText = await response.text();
+        console.error('Error response body:', errorText);
+        throw new Error(`Failed to fetch driver reservations: ${response.status} - ${errorText}`);
       }
 
-      const data: ReservationResource[] = await response.json();
+      const responseText = await response.text();
+      console.log('Response text:', responseText);
+
+      if (!responseText || responseText.trim().length === 0) {
+        console.log('Empty response, returning empty array');
+        return [];
+      }
+
+      const data: ReservationResource[] = JSON.parse(responseText);
+      console.log(`Successfully fetched ${data.length} reservations`);
       return data;
     } catch (error) {
       console.error('Error in getDriverReservations:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get all reservations for a driver
+   * This uses the basic endpoint that returns all reservations
+   */
+  async getAllDriverReservations(driverId: number): Promise<ReservationResource[]> {
+    try {
+      return await this.getDriverReservations(driverId);
+    } catch (error) {
+      console.error('Error in getAllDriverReservations:', error);
       throw error;
     }
   }

@@ -4,14 +4,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Alert,
+    Image,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 
 export default function ParkingDetailsScreen() {
@@ -110,13 +110,22 @@ export default function ParkingDetailsScreen() {
         </TouchableOpacity>
 
         {/* Parking Image */}
-        <Image
-          source={{ 
-            uri: parking.imageUrl || 'https://via.placeholder.com/400x200?text=Parking+Image' 
-          }}
-          style={styles.parkingImage}
-          resizeMode="cover"
-        />
+        {parking.imageUrl ? (
+          <Image
+            source={{ uri: parking.imageUrl }}
+            style={styles.parkingImage}
+            resizeMode="cover"
+            onError={() => console.log('Error loading parking image')}
+            defaultSource={require('@/assets/images/icon.png')}
+          />
+        ) : (
+          <View style={[styles.parkingImage, styles.mapPlaceholder]}>
+            <View style={styles.mapMarker}>
+              <Ionicons name="location" size={40} color="#1B5E6F" />
+            </View>
+            <Text style={styles.parkingLabel}>P</Text>
+          </View>
+        )}
 
         {/* Parking Name */}
         <Text style={styles.parkingName}>{parking.name}</Text>
@@ -262,6 +271,30 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginBottom: 20,
   },
+  imagePlaceholder: {
+    backgroundColor: '#E8F4F8',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  placeholderText: {
+    fontSize: 48,
+    fontWeight: 'bold',
+    color: '#1B5E6F',
+    opacity: 0.5,
+    marginTop: 12,
+  },
+  imagePlaceholder: {
+    backgroundColor: '#E8F4F8',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  placeholderText: {
+    fontSize: 48,
+    fontWeight: 'bold',
+    color: '#1B5E6F',
+    opacity: 0.5,
+    marginTop: 12,
+  },
   parkingName: {
     fontSize: 26,
     fontWeight: 'bold',
@@ -321,6 +354,11 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
+  },
+  reserveButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '600',
   },
   loadingContainer: {
     flex: 1,

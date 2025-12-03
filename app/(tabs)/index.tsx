@@ -251,20 +251,20 @@ const styles = StyleSheet.create({
   locationLabel: {
     color: 'rgba(255, 255, 255, 0.8)',
     fontSize: 14,
-    marginBottom: 4,
   },
   locationRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: 6,
     flex: 1,
+    paddingRight: 8,
   },
   locationText: {
     color: 'white',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
-    flex: 1,
-    flexWrap: 'wrap',
+    flex: 2,
+    numberOfLines: 2,
   },
   notificationButton: {
     padding: 4,
