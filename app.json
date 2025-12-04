@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "parkeoya",
-    "slug": "parkeoya",
+    "slug": "parkeo-ya",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -60,7 +60,12 @@
     ],
     "experiments": {
       "typedRoutes": true,
-      "reactCompiler": true
+      "reactCompiler": false
+    },
+    "extra": {
+      "eas": {
+        "projectId": "eba18fa4-bb90-4fb7-8079-72e5039270c4"
+      }
     }
   }
 }

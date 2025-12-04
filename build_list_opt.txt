@@ -1,0 +1,20 @@
+(node:2520) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+Builds for @jhinta77/parkeo-ya:
+
+ID                       841c223a-96ad-495f-b186-31b7d9c5f329
+Platform                 Android
+Status                   errored
+Profile                  preview
+Distribution             internal
+SDK Version              54.0.0
+Version                  1.0.0
+Version code             1
+Commit                   da70126c159386c821f1579700fefcc103629cca
+Logs                     https://expo.dev/accounts/jhinta77/projects/parkeo-ya/builds/841c223a-96ad-495f-b186-31b7d9c5f329
+Application Archive URL  null
+Build Artifacts URL      null
+Started at               12/4/2025, 6:49:02 AM
+Finished at              12/4/2025, 7:34:54 AM
+Started by               jhinta77
