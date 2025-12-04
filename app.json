@@ -7,7 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "parkeoya",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
@@ -28,7 +28,8 @@
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
         "INTERNET"
-      ]
+      ],
+      "package": "com.jhinta.parkeoya"
     },
     "web": {
       "bundler": "metro",
@@ -60,7 +61,12 @@
     ],
     "experiments": {
       "typedRoutes": true,
-      "reactCompiler": true
+      "reactCompiler": false
+    },
+    "extra": {
+      "eas": {
+        "projectId": "e8e8c050-5835-4c18-9ec0-35856c051157"
+      }
     }
   }
 }

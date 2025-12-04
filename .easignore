@@ -1,0 +1,51 @@
+# Development files
+node_modules/
+.expo/
+.expo-shared/
+npm-debug.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
+dist/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+coverage/
+*.test.js
+*.spec.js
+__tests__/
+
+# Documentation
+*.md
+docs/
+TROUBLESHOOTING.md
+SETUP_API.md
+PARKING_SPOTS_INTEGRATION.md
+LOCATION_SETUP.md
+AUTH_API_INTEGRATION.md
+README.md
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Scripts
+scripts/
+
+# Misc
+*.log
+.env.local
+.env.development
+.env.test
